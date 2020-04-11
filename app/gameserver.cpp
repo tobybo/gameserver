@@ -18,12 +18,15 @@ int proc_type;
 sig_atomic_t proc_reap;
 
 CLogicSocket g_socket;
+CThreadPool g_threadpool;
+int g_stopEvent;
 
 int main(int argc,char* const* argv){
 
     g_os_arg = (char **)argv; //为什么阔以强制转换呢
 
     int exitcode = 0;
+	g_stopEvent = 0;
     proc_reap = 0;
     CConfig* config_instance = CConfig::getInstance();
     using std::cout;

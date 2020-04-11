@@ -14,5 +14,8 @@ extern int proc_type;
 extern sig_atomic_t proc_reap;
 
 extern CLogicSocket g_socket;
+extern CThreadPool g_threadpool;
+
+extern int g_stopEvent;
 
 #endif

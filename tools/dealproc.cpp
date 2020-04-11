@@ -6,6 +6,7 @@
 #include<sys/stat.h>
 #include<fcntl.h>
 #include<signal.h>
+#include<string.h>
 
 #include<string>
 #include<iostream>
@@ -68,9 +69,21 @@ void proc_child_init(){
 		log(ERROR,"[PROC] proc_child_init setmask err");
 	}
 
-
 	//初始化线程池
+	CConfig *config_instance = CConfig::getInstance();
+	int thread_count = stoi((*config_instance)["LOGIC_THREAD_COUNT"]);
+	if(!g_threadpool->create(thread_count)){
+		exit(-2)
+	}
+	sleep(1);
+	//socket init sub
+	if(g_socket.Initialize_subporc() == false){
+		exit(-2);
+	}
 
+	g_socket.epoll_process_init();
+
+	return;
 }
 
 int proc_child_circle(int num){
@@ -78,10 +91,11 @@ int proc_child_circle(int num){
 	title_set(proc_name.c_str());
 	log(LOG,"[PROC] worker_proc begin working,num: %d, pid: %d",num,getpid());
 
-
+	proc_child_init();
 
 	for(;;){
 		//cout<<"child proc: "<<proc_name<<endl;
+		g_socket.epoll_process_events(-1);
 	}
 	return 0;
 }

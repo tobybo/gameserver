@@ -12,3 +12,9 @@ bool CLogicSocket::Initialize(){
 	bool bParentInit = CSocket::Initialize();
 	return bParentInit;
 }
+
+//处理具体消息
+void threadRecvProcFunc(char *pMsgBuf){
+
+	return;
+}

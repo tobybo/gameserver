@@ -13,6 +13,8 @@ public:
 public:
 	//业务逻辑具体消息处理函数
 
+public:
+	virtual void threadRecvProcFunc(char *pMsgBuf);
 };
 
 #endif

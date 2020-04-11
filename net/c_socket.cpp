@@ -17,7 +17,11 @@
 using std::string;
 
 CSocket::CSocket(){
-
+	m_ListenPortCount = 1;
+	m_worker_connections = 1;
+	m_RecyConnectionWaitTime = 60;
+	m_epollhandle = -1;
+	return;
 }
 
 CSocket::~CSocket(){
@@ -27,7 +31,7 @@ CSocket::~CSocket(){
 void CSocket::ReadConf(){
 	CConfig *config_instance = CConfig::getInstance();
 	m_ListenPortCount = std::stoi((*config_instance)["LISTENPORT_COUNT"]);
-
+	m_worker_connections = std::stoi((*config_instance)["WORKER_CONNECTIONS"]);
 }
 
 bool CSocket::setnonblocking(int sockfd){
@@ -104,6 +108,44 @@ bool CSocket::open_listening_sockets(){
 }
 
 bool CSocket::Initialize_subporc(){
+	//发消息互斥量初始化
+	if(pthread_mutex_init(&m_sendMessageQueueMutex, NULL) != 0)
+	{
+		log(ERROR,"[SOCKET] Initialize_subporc err: init sendMsgQueueMutex");
+		return false;
+	}
+	//连接相关互斥量初始化
+	if(pthread_mutex_init(&m_connectionMutex, NULL) != 0)
+	{
+		log(ERROR,"[SOCKET] Initialize_subporc err: init connectionMutex");
+		return false;
+	}
+	//连接回收队列相关互斥量初始化
+	if(pthread_mutex_init(&m_recyconnqueueMutex, NULL) != 0)
+	{
+		return false;
+	}
+	//发消息队列信号量初始化
+	if(sem_init(&m_semEventSendQueue,0,0) == -1){
+		log(ERROR,"[SOCKET] Initialize_subporc err: init sem_t");
+		return false;
+	}
+
+	//创建发消息线程
+	int err; //创建线程一般不通过errno返回错误
+	ThreadItem *pSendQueue = new ThreadItem(this);
+	m_threadVector.push_back(pSendQueue);
+	err = pthread_create(&pSendQueue->_Handle,NULL,ServerSendQueue,pSendQueue);
+	if(err != 0)
+		return false;
+
+	ThreadItem *pRecyconn; //专门用来回收连接的线程
+	m_threadVector.push_back(pRecyconn = new ThreadItem(this));
+	err = pthread_create(&pRecyconn->_Handle,NULL,ServerRecyConnectionThread,pSendQueue);
+	if(err != 0)
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -113,6 +155,146 @@ void CSocket::Shutdown_subproc(){
 }
 
 int CSocket::epoll_process_events(int timer){
+	int events = epoll_wait(m_epollhandle,m_events,MAX_EVENTS,timer);
+	if(events == -1)
+	{
+		if(errno == EINTR)
+		{
+			log(LOG,"[EPOLL] epoll_process_events EINTR");
+			return 1;
+		}
+		else
+		{
+			log(ERROR,"[EPOLL] epoll_process_events errno: %d",errno);
+			return 0;
+		}
+	}
+	if(events == 0)
+	{
+		if(timer != -1)
+		{
+			return 1; //超时 没有事件来
+		}
+		//一直等待 不应该到来而没有事件
+		log(ERROR,"[EPOLL] epoll_process_events no events");
+		return 0;
+	}
+	//惊群?
+	lp_connection_t pConn;
+	uint32_t revent;
+	for(int i = 0;i < events;i++)
+	{
+		pConn = (lp_connection_t)(m_events[i].data.ptr);
 
+		revent = m_events[i].events;
+		if(revent | EPOLLIN)
+		{
+			(this->*(pConn->rhandler))(pConn);
+		}
+		if(revent | EPOLLOUT)
+		{
+			if(revent & (EPOLLERR|EPOLLHUP|EPOLLRDHUP))
+			{
+				--pConn->throwsendcount;
+			}
+			else
+			{
+				(this->*(pConn->whandler))(pConn);
+			}
+		}
+	}
+
+	return 1;
+}
+
+void CSocket::threadRecvProcFunc(char *pMsgBuf){
+	return;
+}
+
+//发数据线程
+void CSocket::ServerSendQueue(void *threadData){
+
+	return (void *)0;
+}
+
+//epoll初始化
+int CSocket::epoll_process_init(){
+	m_epollhandle = epoll_create(m_worker_connections);
+	if(m_epollhandle == -1)
+	{
+		log(ERROR,"[SOCKET] epoll_process_init err");
+		exit(2);
+	}
+	initconnection();
+
+	auto pos = m_ListenSocketList.begin();
+	for(;pos < m_ListenSocketList.end(); pos++)
+	{
+		lp_connection_t pConn = get_connection((*pos)->fd);
+		if(pConn == nullptr)
+		{
+			log(ERROR,"[SOCKET] epoll_process_init err conn");
+			exit(2);
+		}
+		pConn->listening = (*pos);
+		(*pos)->connection = pConn;
+		pConn->rhandler = &CSocket::event_accept;
+		if(epoll_oper_event((*pos)->fd,
+							EPOLL_CTL_ADD,
+							EPOLLIN|EPOLLRDHUP,
+							0,
+							pConn) == -1)
+		{
+			exit(2);
+		}
+	}
+	return 1;
+}
+
+int CSocket::epoll_oper_event(int fd,
+						 uint32_t eventtype,
+						 uint32_t flag,
+						 int baction,
+						 lp_connection_t pConn)
+{
+	struct epoll_event ev;
+	bzero(ev,sizeof(struct epoll_event));
+	if(eventtype == EPOLL_CTL_ADD)
+	{
+		ev.events = flag;
+		pConn->events = flag;
+	}
+	else if(eventtype == EPOLL_CTL_MOD)
+	{
+		ev.events = pConn->events;
+		if(baction == 0)
+		{
+			//增加标记
+			ev.events |= flag;
+		}
+		else if(baction == 1)
+		{
+			//移除标记
+			ev.events &= ~flag;
+		}
+		else
+		{
+			//覆盖
+			ev.events = flag;
+		}
+		pConn->events = ev.events;
+	}
+	else
+	{
+		//close socket的时候会自动从红黑树移除
+		return 1;
+	}
+	ev.data.ptr = (void *)pConn;
+	if(epoll_ctl(m_epollhandle,eventtype,fd,&ev) == -1)
+	{
+		log(ERROR,"[EPOLL] event_poll_ctl err, op: %d, fd: %d, flag: %d",
+				eventtype,fd,flag);
+		return -1;
+	}
 	return 1;
 }
