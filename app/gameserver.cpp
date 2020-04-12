@@ -6,6 +6,7 @@
 #include"macro.h"
 #include"c_socket.h"
 #include"c_slogic.h"
+#include"c_threadpool.h"
 
 char **g_os_arg; //系统参数的全局指针
 char *gp_envmem = nullptr; //指向新分配的系统环境变量的内存

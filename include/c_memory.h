@@ -1,6 +1,8 @@
 #ifndef _C_MEMORY_H_
 #define _C_MEMORY_H_
 
+#include <stddef.h>
+
 class CMemory
 {
 private:
@@ -25,7 +27,7 @@ public:
 				CMemory::m_instance = NULL;
 			}
 		}
-	}
+	};
 
 public:
 	void *AllocMemory(int memCount, bool ifmemset);
@@ -33,6 +35,6 @@ public:
 
 private:
 	static CMemory* m_instance;
-}
+};
 
 #endif

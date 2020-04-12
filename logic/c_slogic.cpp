@@ -14,7 +14,7 @@ bool CLogicSocket::Initialize(){
 }
 
 //处理具体消息
-void threadRecvProcFunc(char *pMsgBuf){
+void CLogicSocket::threadRecvProcFunc(char *pMsgBuf){
 
 	return;
 }

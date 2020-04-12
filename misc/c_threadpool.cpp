@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "global.h"
 #include "ngx_funs.h"
@@ -32,7 +33,7 @@ void CThreadPool::clearMsgRecvQueue(){
 	}
 }
 
-bool CThreadPool::create(int threadNum){
+bool CThreadPool::Create(int threadNum){
 	ThreadItem *pNew;
 	int err;
 
@@ -63,10 +64,10 @@ lblfor:
 	return true;
 }
 
-void *ThreadFunc(void *threadData){
+void* CThreadPool::ThreadFunc(void *threadData){
 	//1 取到线程池对象
 	ThreadItem *pThread = static_cast<ThreadItem*>(threadData);
-	CThreadPool *pThreadPool = pthread->_pthis;
+	CThreadPool *pThreadPool = pThread->_pThis;
 
 	CMemory* mem_instance = CMemory::GetInstance();
 	int err;
@@ -105,9 +106,9 @@ void *ThreadFunc(void *threadData){
 			log(ERROR,"[THREAD] ThreadFunc unlockerr, tid: %d, err: %d",tid,err);
 
 		++pThreadPool->m_iRunningThreadNum;
-		g_socket->threadRecvProcFunc(jobbuff);
+		g_socket.threadRecvProcFunc(jobbuff);
 		mem_instance->FreeMemory(jobbuff);
-		--ppThreadPool->m_iRunningThreadNum;
+		--pThreadPool->m_iRunningThreadNum;
 	}
 	return (void*)0;
 }

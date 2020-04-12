@@ -4,6 +4,7 @@
 #include <vector>
 #include <pthread.h>
 #include <atomic>
+#include <list>
 
 class CThreadPool
 {
@@ -45,7 +46,7 @@ private:
 
 	std::list<char*>       m_MsgRecvQueue; //接收数据消息队列
 	int                    m_iRecvMsgQueueCount; //接收消息队列大小
-}
+};
 
 
 #endif

@@ -2,6 +2,8 @@
 #define _GLOBAL_H_
 
 #include <signal.h>
+#include <c_threadpool.h>
+#include <c_slogic.h>
 
 extern char **g_os_arg;
 extern char *gp_envmem;

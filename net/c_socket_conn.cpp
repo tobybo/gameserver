@@ -42,7 +42,7 @@ void connection_s::putOneToFree(){
 lp_connection_t CSocket::create_one_connection()
 {
 	lp_connection_t p_Conn;
-	CMemory mem_instance = CMemory::GetInstance();
+	CMemory* mem_instance = CMemory::GetInstance();
 	p_Conn = (lp_connection_t)mem_instance->AllocMemory(sizeof(connection_s),true);
 	p_Conn = new(p_Conn) connection_s();
 	//p_Conn->connection_s();
@@ -123,7 +123,7 @@ void CSocket::inRecyConnectQueue(lp_connection_t pConn)
 }
 
 //回收数据线程
-void CSocket::ServerRecyConnectionThread(void* threadData){
+void* CSocket::ServerRecyConnectionThread(void* threadData){
 	ThreadItem *pThread = static_cast<ThreadItem*>(threadData);
 	CSocket *pSocketObj = pThread->_pThis;
 
@@ -137,11 +137,11 @@ void CSocket::ServerRecyConnectionThread(void* threadData){
 		if(pSocketObj->m_recy_connection_n > 0)
 		{
 			time(&currtime);
-			err = pthread_mutex_lock(&m_recyconnqueueMutex);
+			err = pthread_mutex_lock(&pSocketObj->m_recyconnqueueMutex);
 			if(err!=0) log(ERROR,"[SOCKET] ServerRecyConnectionThread pthread_mutex_t err");
 lblRRTT:
-			pos = m_recyconnectionList->begin();
-			posend = m_recyconnectionList->end();
+			pos = pSocketObj->m_recyconnectionList.begin();
+			posend = pSocketObj->m_recyconnectionList.end();
 			for(;pos!=posend;pos++)
 			{
 				pConn = *pos;
@@ -155,34 +155,34 @@ lblRRTT:
 				{
 					log(ERROR," ServerRecyConnectionThread throwsendcount err");
 				}//end if
-				m_recyconnectionList.erase(pos);
+				pSocketObj->m_recyconnectionList.erase(pos);
 				--pSocketObj->m_recy_connection_n;
 
 				pSocketObj->free_connection(pConn);
 				goto lblRRTT;
 			}//end for
-			err = pthread_mutex_unlock(&m_recyconnqueueMutex);
+			err = pthread_mutex_unlock(&pSocketObj->m_recyconnqueueMutex);
 			if(err!=0) log(ERROR,"[SOCKET] ServerRecyConnectionThread pthread_mutex_t err");
 		}//end if
 		if(g_stopEvent == 1)
 		{
 			if(pSocketObj->m_recy_connection_n > 0)
 			{
-				err = pthread_mutex_lock(&m_recyconnqueueMutex);
+				err = pthread_mutex_lock(&pSocketObj->m_recyconnqueueMutex);
 				if(err!=0) log(ERROR,"[SOCKET] ServerRecyConnectionThread pthread_mutex_t 2 err");
 lblRRTT2:
-				pos = m_recyconnectionList->begin();
-				posend = m_recyconnectionList->end();
+				pos = pSocketObj->m_recyconnectionList.begin();
+				posend = pSocketObj->m_recyconnectionList.end();
 				for(;pos!=posend;pos++)
 				{
 					pConn = *pos;
-					m_recyconnectionList.erase(pos);
+					pSocketObj->m_recyconnectionList.erase(pos);
 					--pSocketObj->m_recy_connection_n;
 
 					pSocketObj->free_connection(pConn);
 					goto lblRRTT2;
 				}//end for
-				err = pthread_mutex_unlock(&m_recyconnqueueMutex);
+				err = pthread_mutex_unlock(&pSocketObj->m_recyconnqueueMutex);
 				if(err!=0) log(ERROR,"[SOCKET] ServerRecyConnectionThread pthread_mutex_t 2 err");
 			}//end if
 			break;

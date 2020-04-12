@@ -30,11 +30,11 @@ void CSocket::event_accept(lp_connection_t oldc)
 	do{
 		if(use_accept4)
 		{
-			s = accept4(oldc->fd,&mysockaddr,socklen,SOCK_NONBLOCK);
+			s = accept4(oldc->fd,&mysockaddr,&socklen,SOCK_NONBLOCK);
 		}
 		else
 		{
-			s = accept(oldc->fd,&mysockaddr,socklen);
+			s = accept(oldc->fd,&mysockaddr,&socklen);
 		}
 		if(s == -1)
 		{
@@ -69,7 +69,7 @@ void CSocket::event_accept(lp_connection_t oldc)
 			}
 			return;
 		}
-		memcpy(&new_pConn->s_sockaddr,mysockaddr,socklen);
+		memcpy(&new_pConn->s_sockaddr,&mysockaddr,socklen);
 		if(!use_accept4)
 		{
 			if(!setnonblocking(s))
@@ -80,7 +80,7 @@ void CSocket::event_accept(lp_connection_t oldc)
 			}
 		}
 
-		new_pConn->listening = oldc;
+		new_pConn->listening = oldc->listening;
 
 		new_pConn->rhandler = &CSocket::read_request_handler;
 		new_pConn->whandler = &CSocket::write_request_handler;

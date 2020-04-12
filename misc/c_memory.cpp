@@ -1,13 +1,14 @@
 #include <strings.h>
+#include <stddef.h>
 
 #include "c_memory.h"
 
-CMemory::*m_instance = NULL;
+CMemory* CMemory::m_instance = NULL;
 
-void *AllocMemory(int memCount, bool ifmemset){
+void *CMemory::AllocMemory(int memCount, bool ifmemset){
 	void* tmpData = (void*)new char[memCount];
 	if(ifmemset){
-		bzero(tempData,memCount);
+		bzero(tmpData,memCount);
 	}
 	return tmpData;
 }

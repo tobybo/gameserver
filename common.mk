@@ -36,7 +36,7 @@ endif
 $(BIN):$(LINK_OBJ)
 	echo "do: bin:linkobj $(LINK_OBJ)"
 	@echo "--------------build $(VERSION) mode-------------------"
-	$(cc) -o $@ $^
+	$(cc) -o $@ $^ -lpthread
 
 # .o:.cpp
 $(LINK_OBJ_DIR)/%.o:%.cpp

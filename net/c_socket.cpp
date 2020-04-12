@@ -195,7 +195,7 @@ int CSocket::epoll_process_events(int timer){
 		{
 			if(revent & (EPOLLERR|EPOLLHUP|EPOLLRDHUP))
 			{
-				--pConn->throwsendcount;
+				--pConn->iThrowsendCount;
 			}
 			else
 			{
@@ -212,7 +212,7 @@ void CSocket::threadRecvProcFunc(char *pMsgBuf){
 }
 
 //发数据线程
-void CSocket::ServerSendQueue(void *threadData){
+void* CSocket::ServerSendQueue(void *threadData){
 
 	return (void *)0;
 }
@@ -258,7 +258,7 @@ int CSocket::epoll_oper_event(int fd,
 						 lp_connection_t pConn)
 {
 	struct epoll_event ev;
-	bzero(ev,sizeof(struct epoll_event));
+	bzero(&ev,sizeof(struct epoll_event));
 	if(eventtype == EPOLL_CTL_ADD)
 	{
 		ev.events = flag;

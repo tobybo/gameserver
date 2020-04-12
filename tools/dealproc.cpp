@@ -72,8 +72,8 @@ void proc_child_init(){
 	//初始化线程池
 	CConfig *config_instance = CConfig::getInstance();
 	int thread_count = stoi((*config_instance)["LOGIC_THREAD_COUNT"]);
-	if(!g_threadpool->create(thread_count)){
-		exit(-2)
+	if(!g_threadpool.Create(thread_count)){
+		exit(-2);
 	}
 	sleep(1);
 	//socket init sub

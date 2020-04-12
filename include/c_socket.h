@@ -1,10 +1,15 @@
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
 
+#include <stdlib.h>
 #include <netinet/in.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
+#include <semaphore.h>
+#include <atomic>
 
 #include <vector>
+#include <list>
 
 #define LISTEN_BACKLOG 511
 #define MAX_EVENTS     512
@@ -89,14 +94,14 @@ private:
 	lp_connection_t create_one_connection();
 	void initconnection();
 	void clearconnection();
-	void closeconnection();
+	void closeconnection(lp_connection_t);
 	lp_connection_t get_connection(int isock); //从连接池中获取一个空闲连接
 	void free_connection(lp_connection_t pConn); //归还参数pConn所代表的连接到连接池
 	void inRecyConnectQueue(lp_connection_t pConn);
 
 	//线程相关函数
-	static void ServerSendQueue(void* threadData);
-	static void ServerRecyConnectionThread(void* threadData);
+	static void* ServerSendQueue(void* threadData);
+	static void* ServerRecyConnectionThread(void* threadData);
 
 
 private:
@@ -108,7 +113,7 @@ private:
 
 		ThreadItem(CSocket *pthis):_pThis(pthis),ifrunning(false){}
 		~ThreadItem(){}
-	}
+	};
 
 	int m_ListenPortCount;    //监听的端口数量
 	int m_worker_connections; //epoll连接的最大项数 这里是客户端连上来的最大数量
