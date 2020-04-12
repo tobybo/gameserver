@@ -187,11 +187,11 @@ int CSocket::epoll_process_events(int timer){
 		pConn = (lp_connection_t)(m_events[i].data.ptr);
 
 		revent = m_events[i].events;
-		if(revent | EPOLLIN)
+		if(revent & EPOLLIN)
 		{
 			(this->*(pConn->rhandler))(pConn);
 		}
-		if(revent | EPOLLOUT)
+		if(revent & EPOLLOUT)
 		{
 			if(revent & (EPOLLERR|EPOLLHUP|EPOLLRDHUP))
 			{
@@ -247,6 +247,7 @@ int CSocket::epoll_process_init(){
 		{
 			exit(2);
 		}
+		log(INFO,"[EPOLL] epoll_process_init succ, lsport: %d,lsfd: %d",(*pos)->port,(*pos)->fd);
 	}
 	return 1;
 }

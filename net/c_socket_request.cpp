@@ -24,8 +24,23 @@ using std::endl;
 
 void CSocket::read_request_handler(lp_connection_t pConn)
 {
+	ssize_t n;
 	char buff[1025];
-	recv(pConn->fd,buff,1024,0);
+	n = recv(pConn->fd,buff,1024,0);
+	if(n == 0)
+	{
+		//客户端关闭连接
+		if(close(pConn->fd) == -1)
+		{
+			log(ERROR,"[SOCKET] read_request_handler close fd err, fd: %d",pConn->fd);
+		}
+		else
+		{
+			log(INFO,"[SOCKET] read_request_handler close fd succ, fd: %d",pConn->fd);
+		}
+		inRecyConnectQueue(pConn);
+		return;
+	}
 	//cout<<"[SOCKET] read_request_handler: "<<buff<<endl;
 	log(INFO,"[SOCKET] read_request_handler: %s",buff);
 }
