@@ -21,6 +21,10 @@ CSocket::CSocket(){
 	m_worker_connections = 1;
 	m_RecyConnectionWaitTime = 60;
 	m_epollhandle = -1;
+
+	m_iLenPkgHeader = sizeof(COMM_PKG_HEADER);
+	m_iLenMsgHeader = sizeof(STRUC_MSG_HEADER);
+
 	return;
 }
 

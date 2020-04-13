@@ -11,6 +11,8 @@
 #include <vector>
 #include <list>
 
+#include "net_comm.h"
+
 #define LISTEN_BACKLOG 511
 #define MAX_EVENTS     512
 
@@ -48,6 +50,11 @@ struct connection_s
 
 	//收包相关
 	pthread_mutex_t logicPorcMutex;
+	unsigned char curStat;
+	char dataHeadInfo[_DATA_BUFSIZE_];
+	char* precvbuf;
+	unsigned int irecvlen;
+	char* precvMemPointer;
 
 	//发包相关
 	std::atomic<int> iThrowsendCount;
@@ -58,6 +65,12 @@ struct connection_s
 	lp_connection_t next;
 
 };
+
+typedef struct
+{
+	lp_connection_t pConn;
+	uint64_t iCurrsequence;
+}STRUC_MSG_HEADER,*LPSTRUC_MSG_HEADER;
 
 class CSocket
 {
@@ -90,6 +103,11 @@ private:
 	void read_request_handler(lp_connection_t pConn); //读事件响应
 	void write_request_handler(lp_connection_t pConn); //写事件响应
 
+	//收包发包的一些工具函数
+	ssize_t recvproc(lp_connection_t pConn,char* buff,ssize_t bufflen);
+	void wait_request_handler_proc_p1(lp_connection_t pConn);
+	void wait_request_handler_proc_last(lp_connection_t pConn);
+
 	//连接池或者连接相关
 	lp_connection_t create_one_connection();
 	void initconnection();
@@ -103,6 +121,9 @@ private:
 	static void* ServerSendQueue(void* threadData);
 	static void* ServerRecyConnectionThread(void* threadData);
 
+protected:
+	size_t m_iLenPkgHeader;
+	size_t m_iLenMsgHeader;
 
 private:
 	struct ThreadItem

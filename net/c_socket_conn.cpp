@@ -29,7 +29,13 @@ connection_s::~connection_s(){
 
 void connection_s::getOneToUse(){
 	++iCurrsequence;
-	instance = !instance;
+
+	curStat = _PKG_HD_INIT;
+	irecvlen = sizeof(COMM_PKG_HEADER);
+	precvbuf = dataHeadInfo;
+
+	precvMemPointer = nullptr;
+
 
 	events = 0;
 }

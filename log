@@ -26,3 +26,80 @@
 [INFO][2020-04-12 20:04:59][SOCKET] read_request_handler: nihao
 
 [INFO][2020-04-12 20:05:06][SOCKET] read_request_handler close fd succ, fd: 7
+[INFO][2020-04-12 20:46:21][SOCKET] read_request_handler: hello
+
+[INFO][2020-04-12 20:46:35][SOCKET] read_request_handler: hele
+
+[INFO][2020-04-12 20:46:47][SOCKET] read_request_handler: huhu
+
+
+[INFO][2020-04-12 20:47:37][SOCKET] read_request_handler close fd succ, fd: 7
+[INFO][2020-04-12 20:47:44][SOCKET] read_request_handler close fd succ, fd: 8
+[INFO][2020-04-12 20:47:49][SOCKET] read_request_handler close fd succ, fd: 9
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 1
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 2
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 15
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 17
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 3
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 29
+[LOG][2020-04-13 23:55:05][SIGNAL] init_signals succ, signo: 31
+[ERROR][2020-04-13 23:55:05][SOCKET] open_listening_sockets bind err, num: 0
+[LOG][2020-04-13 23:55:05][PROC] init proc come, pid: 17984
+[INFO][2020-04-13 23:55:30][SOCKET] read_request_handler: hell
+
+
+[INFO][2020-04-13 23:55:40][SOCKET] read_request_handler: dafd
+
+
+[INFO][2020-04-13 23:55:53][SOCKET] read_request_handler: ÿôÿý
+
+
+[INFO][2020-04-13 23:55:57][SOCKET] read_request_handler close fd succ, fd: 7
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 1
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 2
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 15
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 17
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 3
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 29
+[LOG][2020-04-13 23:57:21][SIGNAL] init_signals succ, signo: 31
+[ERROR][2020-04-13 23:57:21][SOCKET] open_listening_sockets bind err, num: 0
+[LOG][2020-04-13 23:57:21][PROC] init proc come, pid: 18223
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 1
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 2
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 15
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 17
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 3
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 29
+[LOG][2020-04-13 23:58:09][SIGNAL] init_signals succ, signo: 31
+[LOG][2020-04-13 23:58:09][SOCKET] open_listening_sockets succ, num: 0, port: 9500
+[LOG][2020-04-13 23:58:09][SOCKET] open_listening_sockets succ, num: 1, port: 9501
+[LOG][2020-04-13 23:58:09][PROC] init proc come, pid: 18231
+[LOG][2020-04-13 23:58:09][SERVER] start server, set daemon succ
+[LOG][2020-04-13 23:58:09][PROC] proc_create_child, fork pid: 18233
+[INFO][2020-04-13 23:58:09][SIGNAL] proc_create_childs succ, num: 0, pid: 18233
+[LOG][2020-04-13 23:58:09][TITLE] title_set begin, title: cb3_master 
+[LOG][2020-04-13 23:58:09][TITLE] title_set end, title: cb3_master 
+[LOG][2020-04-13 23:58:09][PROC] master_proc is working, pid: 18232
+[LOG][2020-04-13 23:58:09][PROC] proc_create_child, fork pid: 0
+[LOG][2020-04-13 23:58:09][TITLE] title_set begin, title: cb3_worker_0 
+[LOG][2020-04-13 23:58:09][TITLE] title_set end, title: cb3_worker_0 
+[LOG][2020-04-13 23:58:09][PROC] worker_proc begin working,num: 0, pid: 18233
+[INFO][2020-04-13 23:58:10][EPOLL] epoll_process_init succ, lsport: 9500,lsfd: 4
+[INFO][2020-04-13 23:58:10][EPOLL] epoll_process_init succ, lsport: 9501,lsfd: 5
+[INFO][2020-04-13 23:58:22][SOCKET] read_request_handler runing, fd: 7, recvstat: 1, recvsize: 7
+[INFO][2020-04-13 23:58:30][SOCKET] read_request_handler runing, fd: 7, recvstat: 2, recvsize: 1
+[INFO][2020-04-13 23:58:30][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 4
+[INFO][2020-04-13 23:58:37][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 7
+[INFO][2020-04-13 23:58:41][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 11
+[INFO][2020-04-13 23:58:51][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 69
+[INFO][2020-04-13 23:58:58][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 154
+[INFO][2020-04-13 23:59:07][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 229
+[INFO][2020-04-13 23:59:12][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 80
+[INFO][2020-04-13 23:59:22][SOCKET] read_request_handler close fd succ, fd: 7
+[INFO][2020-04-14 00:00:21][SOCKET] read_request_handler runing, fd: 7, recvstat: 2, recvsize: 8
+[INFO][2020-04-14 00:00:25][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 5
+[INFO][2020-04-14 00:00:27][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 7
+[INFO][2020-04-14 00:00:33][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 40
+[INFO][2020-04-14 00:00:38][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 57
+[INFO][2020-04-14 00:00:44][SOCKET] read_request_handler runing, fd: 7, recvstat: 3, recvsize: 65
+[INFO][2020-04-14 00:00:49][SOCKET] read_request_handler close fd succ, fd: 7
