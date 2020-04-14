@@ -7,6 +7,7 @@
 #include "c_threadpool.h"
 #include "c_memory.h"
 #include "macro.h"
+#include "c_crc32.h"
 
 //静态成员初始化
 pthread_mutex_t CThreadPool::m_pthreadMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -111,4 +112,40 @@ void* CThreadPool::ThreadFunc(void *threadData){
 		--pThreadPool->m_iRunningThreadNum;
 	}
 	return (void*)0;
+}
+
+void CThreadPool::inMsgRecvQueueAndSignal(char *buf)
+{
+	int err = pthread_mutex_lock(&m_pthreadMutex);
+	if(err != 0)
+		log(ERROR,"[THREAD_POOL] inMsgRecvQueueAndSignal lock err, buff: %s",buf);
+
+	m_MsgRecvQueue.push_back(buf);
+	++m_iRecvMsgQueueCount;
+
+	err = pthread_mutex_unlock(&m_pthreadMutex);
+	if(err != 0)
+		log(ERROR,"[THREAD_POOL] inMsgRecvQueueAndSignal unlock err, buff: %s",buf);
+
+	Call();
+	return;
+}
+
+void CThreadPool::Call()
+{
+	int err = pthread_cond_signal(&m_pthreadCond);
+	if(err != 0)
+		log(ERROR,"[THREAD_POOL] call err");
+
+	//定时记录线程是否处于非常繁忙的状态（所有线程都在工作）
+	if( m_iRunningThreadNum >= m_iThreadNum)
+	{
+		time_t currtime = time(nullptr);
+		if(currtime - m_iLastEmgTime > 10)
+		{
+			m_iLastEmgTime = currtime;
+			log(LOG,"[THREAD_POOL] all logic pthread is busy");
+		}
+	}
+	return;
 }

@@ -12,6 +12,14 @@ public:
 
 public:
 	//业务逻辑具体消息处理函数
+	bool onPlyaerRgist( lp_connection_t pConn,
+					    LPSTRUC_MSG_HEADER pMsgHeader,
+						char* pPkgBody,
+						unsigned short iBodyLength);
+	bool onPlyaerLogin( lp_connection_t pConn,
+					    LPSTRUC_MSG_HEADER pMsgHeader,
+						char* pPkgBody,
+						unsigned short iBodyLength);
 
 public:
 	virtual void threadRecvProcFunc(char *pMsgBuf);

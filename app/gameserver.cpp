@@ -7,6 +7,8 @@
 #include"c_socket.h"
 #include"c_slogic.h"
 #include"c_threadpool.h"
+#include"c_memory.h"
+#include"c_crc32.h"
 
 char **g_os_arg; //系统参数的全局指针
 char *gp_envmem = nullptr; //指向新分配的系统环境变量的内存
@@ -35,12 +37,19 @@ int main(int argc,char* const* argv){
     //testDefFun();
     //1 加载配置
     if(!config_instance->loadConfig("server.conf"))
+	{
         cout<<"load_conf faild"<<endl;
+		exitcode = 2;
+		goto lblexit;
+	}
     else
     {
         cout<<"load_conf succ"<<endl;
         //cout<<"port: "<<(*config_instance)["PORT"]<<endl;
     }
+
+	CMemory::GetInstance();
+	CCRC32::GetInstance();
 
     //2 给环境参数搬家
     title_move_environ();
