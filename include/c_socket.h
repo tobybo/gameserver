@@ -58,6 +58,9 @@ struct connection_s
 
 	//发包相关
 	std::atomic<int> iThrowsendCount;
+	char* psendMemPointer;
+	char* psendbuf;
+	unsigned int isendlen;
 
 	//回收相关
 	time_t iRecyTime; //放到回收队列的时间
@@ -93,6 +96,11 @@ public:
 						 uint32_t flag,
 						 int baction,
 						 lp_connection_t pConn);
+
+protected:
+	//将要发送的数据放入发送队列
+	void msgSend(char* psendbuf);
+
 private:
 	void ReadConf();
 	bool open_listening_sockets();
@@ -107,6 +115,10 @@ private:
 	ssize_t recvproc(lp_connection_t pConn,char* buff,ssize_t bufflen);
 	void wait_request_handler_proc_p1(lp_connection_t pConn);
 	void wait_request_handler_proc_last(lp_connection_t pConn);
+	void clearMsgSendQueue();
+
+	//实际发送数据
+	ssize_t sendproc(lp_connection_t,char*,ssize_t);
 
 	//连接池或者连接相关
 	lp_connection_t create_one_connection();
@@ -154,6 +166,9 @@ private:
 	pthread_mutex_t m_recyconnqueueMutex; //连接回收队列相关的互斥量
 	pthread_mutex_t m_sendMessageQueueMutex; //处理发消息线程相关的信号量
 	int m_RecyConnectionWaitTime; //回收连接延迟时间
+
+	std::list<char*> m_MsgSendQueue; //发送队列
+	std::atomic<int> m_iSendMsgQueueCount; //发送消息队列大小
 
 	std::vector<ThreadItem*> m_threadVector; //各个线程的容器
 	sem_t           m_semEventSendQueue; //处理发消息队列的信号量 无名信号量

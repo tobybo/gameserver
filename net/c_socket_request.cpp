@@ -204,8 +204,83 @@ void CSocket::wait_request_handler_proc_last(lp_connection_t pConn)
 
 void CSocket::write_request_handler(lp_connection_t pConn)
 {
-	char test_str[] = "hi,i'm a linux server.";
-	send(pConn->fd,(void*)test_str,sizeof(test_str),0);
-	//cout<<"[SOCKET] write_request_handler~ "<<endl;
-	log(INFO,"[SOCKET] write_request_handler~");
+	CMemory* mem_instance = CMemory::GetInstance();
+
+	ssize_t n = sendproc(pConn,pConn->psendbuf,pConn->isendlen);
+	if(n > 0 && n != pConn->isendlen)
+	{
+		//发送正常 但是没有发送完整 继续等待 LT模式的epoll下次触发
+		pConn->psendbuf += n;
+		pConn->isendlen -= n;
+		//这里本来就是 epoll写事件触发的回调 不用再 ++pConn->iThrowsendCount;
+		return;
+	}
+	else if(n == -1)
+	{
+		//epoll通知我可写 可是缓冲区居然是满的
+		log(ERROR,"[MSG_SEND] write_request_handler err1");
+		return;
+	}
+
+	if(n >= pConn->isendlen)
+	{
+		//发送完成 需要把写事件从epoll红黑树里移除
+		if(epoll_oper_event(pConn->fd,
+					EPOLL_CTL_MOD,
+					EPOLLOUT,
+					1, //0 增加 1 去掉 2 覆盖
+					pConn) == -1)
+		{
+			log(ERROR,"[MSG_SEND] write_request_handler epoll_mod err");
+		}
+		log(INFO,"[MSG_SEND] write_request_handler send all succ");
+	}
+	else
+	{
+		log(INFO,"[SOCKET] write_request_handler send err2");
+		//不做特殊处理 这种情况认为对端断开 在read事件会干掉连接和从epoll红黑树里移除
+	}
+
+	//要么发送完 要么对端断开 做内存释放和发送队列清理
+	mem_instance->FreeMemory(pConn->psendMemPointer);
+	pConn->psendMemPointer = NULL;
+	--pConn->iThrowsendCount;
+	if(sem_post(&m_semEventSendQueue) == -1)
+		log(ERROR,"[MSG_SEND] write_request_handler sem_post err");
+	return;
+}
+
+ssize_t CSocket::sendproc(lp_connection_t pConn,char* buff,ssize_t bufflen)
+{
+	ssize_t n;
+	for(;;)
+	{
+		n = send(pConn->fd,buff,bufflen,0);
+		if(n > 0)
+		{
+			//发送成功n字节
+			return n;
+		}
+
+		if(n == 0)
+		{
+			//超时 连接断开epoll会通知到rhander处理
+			return 0;
+		}
+
+		if(errno == EAGAIN)
+		{
+			//内核缓冲区满
+			return -1;
+		}
+
+		if(errno == EINTR)
+		{
+			log(LOG,"[MSG_SEND] sendproc send errno is EINTR");
+		}
+		else
+		{
+			return -2;
+		}
+	}
 }

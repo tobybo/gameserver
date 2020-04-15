@@ -13,6 +13,8 @@
 #include "c_socket.h"
 #include "global.h"
 #include "macro.h"
+#include "c_memory.h"
+#include "c_lockmutex.h"
 
 using std::string;
 
@@ -218,6 +220,132 @@ void CSocket::threadRecvProcFunc(char *pMsgBuf){
 
 //发数据线程
 void* CSocket::ServerSendQueue(void *threadData){
+	ThreadItem *pThread = static_cast<ThreadItem*>(threadData);
+	CSocket *pSocketObj = pThread->_pThis;
+	int err;
+	std::list<char *>::iterator pos,pos2,posend;
+
+	char *pMsgBuf;
+	LPSTRUC_MSG_HEADER pMsgHeader;
+	LPCOMM_PKG_HEADER  pPkgHeader;
+	lp_connection_t    pConn;
+	unsigned short     itmp;
+	ssize_t            sendsize;
+
+	CMemory* mem_instance = CMemory::GetInstance();
+
+	while(g_stopEvent == 0)
+	{
+		if(sem_wait(&pSocketObj->m_semEventSendQueue) == -1)
+		{
+			if(errno != EINTR)
+				log(ERROR,"[MSG_SEND] ServerSendQueue sem_wait err, errno: %d",errno);
+		}
+		if(g_stopEvent != 0)
+			break;
+
+		if(pSocketObj->m_iSendMsgQueueCount > 0) //原子的
+		{
+			err = pthread_mutex_lock(&pSocketObj->m_sendMessageQueueMutex);
+			if(err != 0) log(ERROR,"[MSG_SEND] ServerSendQueue lock err, err: %d",err);
+			pos = pSocketObj->m_MsgSendQueue.begin();
+			posend = pSocketObj->m_MsgSendQueue.end();
+			while(pos != posend)
+			{
+				pMsgBuf = *pos;
+				pMsgHeader = (LPSTRUC_MSG_HEADER)pMsgBuf;
+				pPkgHeader = (LPCOMM_PKG_HEADER)(pMsgBuf + pSocketObj->m_iLenMsgHeader);
+				pConn = pMsgHeader->pConn;
+
+				if(pConn->iCurrsequence != pMsgHeader->iCurrsequence)
+				{
+					pos2 = pos;
+					pos++;
+					pSocketObj->m_MsgSendQueue.erase(pos2);
+					--pSocketObj->m_iSendMsgQueueCount;
+					mem_instance->FreeMemory(pMsgBuf);
+					continue;
+				}
+
+				if(pConn->iThrowsendCount > 0)
+				{
+					pos++;
+					continue;
+				}
+				//可以发送
+				pConn->psendMemPointer = pMsgBuf;
+				pos2 = pos;
+				pos++;
+				pSocketObj->m_MsgSendQueue.erase(pos2);
+				--pSocketObj->m_iSendMsgQueueCount;
+				pConn->psendbuf = (char*)pPkgHeader; //从包头开始发 不发消息头
+				itmp = ntohs(pPkgHeader->pkgLen); //包头+包体的长度
+				pConn->isendlen = itmp;
+
+				log(INFO,"[MSG_SEND] ServerSendQueue ready send");
+
+				sendsize = pSocketObj->sendproc(pConn,pConn->psendbuf,pConn->isendlen);
+				if(sendsize > 0)
+				{
+					if(sendsize >= pConn->isendlen)
+					{
+						//发送完数据
+						mem_instance->FreeMemory(pConn->psendMemPointer);
+						pConn->psendMemPointer = nullptr;
+						pConn->iThrowsendCount = 0;
+						log(INFO,"[MSG_SEND] ServerSendQueue send all succ");
+					}
+					else
+					{
+						pConn->psendbuf += sendsize;
+						pConn->isendlen -= sendsize;
+						++pConn->iThrowsendCount;
+
+						if(pSocketObj->epoll_oper_event(pConn->fd,
+									EPOLL_CTL_MOD, //在监听套接字接连接进来的时候就加入了epoll的红黑树中
+									EPOLLOUT, //默认LT模式
+									0,
+									pConn) == -1)
+						{
+							log(ERROR,"[MSG_SEND] ServerSendQueue, epoll_mod err!!!!!!, fd: %d",pConn->fd);
+						}
+						log(LOG,"[MSG_SEND] ServerSendQueue, epoll_mod succ");
+					}
+					continue;
+				}
+				else if(sendsize == 0)
+				{
+					//对端断开连接 丢弃包
+					mem_instance->FreeMemory(pConn->psendMemPointer);
+					pConn->psendMemPointer = nullptr;
+					pConn->iThrowsendCount = 0;
+					continue;
+				}
+				else if(sendsize == -1)
+				{
+					++pConn->iThrowsendCount;
+
+					if(pSocketObj->epoll_oper_event(pConn->fd,
+								EPOLL_CTL_MOD, //在监听套接字接连接进来的时候就加入了epoll的红黑树中
+								EPOLLOUT, //默认LT模式
+								0,
+								pConn) == -1)
+					{
+						log(ERROR,"[MSG_SEND] ServerSendQueue, epoll_mod err2!!!!!!, fd: %d",pConn->fd);
+					}
+					log(LOG,"[MSG_SEND] ServerSendQueue, epoll_mod succ2");
+				}
+				else
+				{
+					//其他错误 也认为是对端断开
+					mem_instance->FreeMemory(pConn->psendMemPointer);
+					pConn->psendMemPointer = nullptr;
+					pConn->iThrowsendCount = 0;
+					continue;
+				}
+			}//end while
+		}//end if(count > 0)
+	}//end if while(g_stopEvent == 0)
 
 	return (void *)0;
 }
@@ -303,4 +431,17 @@ int CSocket::epoll_oper_event(int fd,
 		return -1;
 	}
 	return 1;
+}
+
+void CSocket::msgSend(char* psendbuf)
+{
+	CLock lock(&m_sendMessageQueueMutex);
+	m_MsgSendQueue.push_back(psendbuf);
+	++m_iSendMsgQueueCount;
+
+	if(sem_post(&m_semEventSendQueue) == -1)
+	{
+		log(ERROR,"[SEND_MSG] msgSend sem_post err");
+	}
+	return;
 }

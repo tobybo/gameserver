@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <semaphore.h>
 #include <atomic>
+#include <string.h>
 
 #include <vector>
 #include <list>
@@ -15,6 +16,8 @@
 #include "c_crc32.h"
 #include "global.h"
 #include "ngx_funs.h"
+#include "logic_comm.h"
+#include "c_memory.h"
 
 typedef bool (CLogicSocket::*handler)( lp_connection_t pConn,
 									   LPSTRUC_MSG_HEADER pMsgHeader,
@@ -23,8 +26,8 @@ typedef bool (CLogicSocket::*handler)( lp_connection_t pConn,
 
 static std::map<unsigned short,handler> msgMap = {
 	//{0x01,NULL},
-	{0x1000,&CLogicSocket::onPlyaerRgist},
-	{0x1001,&CLogicSocket::onPlyaerLogin},
+	{PT_ON_PLY_REGIST  ,  &CLogicSocket::onPlyaerRgist},
+	{PT_ON_PLY_LOGIN   ,  &CLogicSocket::onPlyaerLogin},
 };
 
 CLogicSocket::CLogicSocket(){
@@ -82,5 +85,29 @@ void CLogicSocket::threadRecvProcFunc(char *pMsgBuf){
 
 	(this->*msgMap[imsgCode])(pConn,pMsgHeader,(char*)pPkgBody,pkglen-m_iLenPkgHeader);
 	return;
+}
+
+void CLogicSocket::msgSend(lp_connection_t pConn,unsigned short msgCode,char* pPkgBody,unsigned short bodyLen)
+{
+	if(bodyLen + m_iLenPkgHeader > _PKG_MAX_LENGTH - 1000)
+	{
+		log(ERROR,"[MSG_SEND] msgSend err, pkglen is too longer, msgCode: %d, bodyLen: %d",msgCode,bodyLen);
+		return;
+	}
+	CMemory* mem_instance = CMemory::GetInstance();
+	char *psendbuf = (char*)mem_instance->AllocMemory(bodyLen + m_iLenMsgHeader + m_iLenPkgHeader,true);
+	LPSTRUC_MSG_HEADER pMsgHeader = (LPSTRUC_MSG_HEADER)psendbuf;
+	pMsgHeader->pConn = pConn;
+	pMsgHeader->iCurrsequence = pConn->iCurrsequence;
+	LPCOMM_PKG_HEADER pPkgHeader = (LPCOMM_PKG_HEADER)(psendbuf + m_iLenMsgHeader);
+	pPkgHeader->msgCode = htons(msgCode);
+	pPkgHeader->pkgLen = htons(m_iLenPkgHeader + bodyLen);
+
+	CCRC32* crc32_instance = CCRC32::GetInstance();
+	pPkgHeader->crc32 = crc32_instance->Get_CRC((unsigned char*)pPkgHeader,m_iLenPkgHeader + bodyLen);
+
+	memcpy(psendbuf + m_iLenMsgHeader + m_iLenPkgHeader, pPkgBody, bodyLen);
+
+	this->CSocket::msgSend(psendbuf);
 }
 
