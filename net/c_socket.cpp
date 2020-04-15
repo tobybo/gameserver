@@ -344,6 +344,8 @@ void* CSocket::ServerSendQueue(void *threadData){
 					continue;
 				}
 			}//end while
+			err = pthread_mutex_unlock(&pSocketObj->m_sendMessageQueueMutex);
+			if(err != 0) log(ERROR,"[MSG_SEND] ServerSendQueue unlock err, err: %d",err);
 		}//end if(count > 0)
 	}//end if while(g_stopEvent == 0)
 

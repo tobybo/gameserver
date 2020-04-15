@@ -34,7 +34,7 @@ endif
 
 # .bin:.o
 $(BIN):$(LINK_OBJ)
-	echo "do: bin:linkobj $(LINK_OBJ)"
+	#@echo "do: bin:linkobj $(LINK_OBJ)"
 	@echo "--------------build $(VERSION) mode-------------------"
 	$(cc) -o $@ $^ -lpthread
 
@@ -45,7 +45,7 @@ $(LINK_OBJ_DIR)/%.o:%.cpp
 
 $(DEP_DIR)/%.d:%.cpp
 	@echo "do: dep:cpp"
-	echo -n $(LINK_OBJ_DIR)/ > $@
+	#echo -n $(LINK_OBJ_DIR)/ > $@
 	$(cc) -I$(INCLUDE_PATH) -MM $^ >> $@
 
 
