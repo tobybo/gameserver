@@ -40,6 +40,7 @@ public:
 
 public:
 	LPSTRU_DB_CONN getDb();
+	void freeDb(LPSTRU_DB_CONN);
 
 public:
 	LPSTRU_DB_CONN m_free_dbconn;

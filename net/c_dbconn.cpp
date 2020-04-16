@@ -79,3 +79,9 @@ LPSTRU_DB_CONN CDbconn::getDb()
 	m_free_dbconn = pConn->next;
 	return pConn;
 }
+
+void CDbconn::freeDb(LPSTRU_DB_CONN pConn)
+{
+	pConn->next = m_free_dbconn;
+	m_free_dbconn = pConn;
+}
