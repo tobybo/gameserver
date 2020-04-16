@@ -36,16 +36,16 @@ endif
 $(BIN):$(LINK_OBJ)
 	#@echo "do: bin:linkobj $(LINK_OBJ)"
 	@echo "--------------build $(VERSION) mode-------------------"
-	$(cc) -o $@ $^ -lpthread
+	$(cc) -o $@ $^ -lpthread -lmysqlclient
 
 # .o:.cpp
 $(LINK_OBJ_DIR)/%.o:%.cpp
 	@echo "do: obj:cpp"
-	$(cc) -I$(INCLUDE_PATH) -o $@ -c $(filter %.cpp,$^)
+	$(cc) -I$(INCLUDE_PATH) -I /usr/include/mysql/ -o $@ -c $(filter %.cpp,$^)
 
 $(DEP_DIR)/%.d:%.cpp
 	@echo "do: dep:cpp"
 	#echo -n $(LINK_OBJ_DIR)/ > $@
-	$(cc) -I$(INCLUDE_PATH) -MM $^ >> $@
+	$(cc) -I$(INCLUDE_PATH) -I /usr/include/mysql/ -MM $^ >> $@
 
 

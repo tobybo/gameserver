@@ -9,6 +9,7 @@
 #include"c_threadpool.h"
 #include"c_memory.h"
 #include"c_crc32.h"
+#include"c_dbconn.h"
 
 char **g_os_arg; //系统参数的全局指针
 char *gp_envmem = nullptr; //指向新分配的系统环境变量的内存

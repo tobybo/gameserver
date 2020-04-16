@@ -15,6 +15,7 @@
 #include"ngx_funs.h"
 #include"macro.h"
 #include"config.h"
+#include"c_dbconn.h"
 
 using std::cout;
 using std::endl;
@@ -68,6 +69,9 @@ void proc_child_init(){
 	{
 		log(ERROR,"[PROC] proc_child_init setmask err");
 	}
+
+	//初始化数据库连接
+	CDbconn::GetInstance();
 
 	//初始化线程池
 	CConfig *config_instance = CConfig::getInstance();
