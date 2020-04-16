@@ -156,8 +156,30 @@ bool CSocket::Initialize_subporc(){
 }
 
 void CSocket::Shutdown_subproc(){
+	if(sem_post(&m_semEventSendQueue) == -1)
+	{
+		log(ERROR,"[STOP] Shutdown_subproc, sem_post err");
+	}
 
-	return;
+	auto pos = m_threadVector.begin();
+	for(;pos < m_threadVector.end();pos++)
+	{
+		pthread_join((*pos)->_Handle,NULL);
+	}
+	for(pos = m_threadVector.begin();pos < m_threadVector.end();pos++)
+	{
+		if(*pos)
+			delete *pos;
+	}
+	m_threadVector.clear();
+
+	clearMsgSendQueue();
+	clearconnection();
+
+	pthread_mutex_destroy(&m_connectionMutex);
+	pthread_mutex_destroy(&m_sendMessageQueueMutex);
+	pthread_mutex_destroy(&m_recyconnqueueMutex);
+	sem_destroy(&m_semEventSendQueue);
 }
 
 int CSocket::epoll_process_events(int timer){
@@ -445,5 +467,19 @@ void CSocket::msgSend(char* psendbuf)
 	{
 		log(ERROR,"[SEND_MSG] msgSend sem_post err");
 	}
+
 	return;
+}
+
+void CSocket::clearMsgSendQueue()
+{
+	char* sTmpMempoint;
+	CMemory* mem_instance = CMemory::GetInstance();
+
+	while(!m_MsgSendQueue.empty())
+	{
+		sTmpMempoint = m_MsgSendQueue.front();
+		m_MsgSendQueue.pop_front();
+		mem_instance->FreeMemory(sTmpMempoint);
+	}
 }

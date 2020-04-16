@@ -149,3 +149,38 @@ void CThreadPool::Call()
 	}
 	return;
 }
+
+void CThreadPool::StopAll()
+{
+	if(m_shutdown == true)
+	{
+		return;
+	}
+	m_shutdown = true;
+
+	int err = pthread_cond_broadcast(&m_pthreadCond);
+	if(err != 0)
+	{
+		log(ERROR,"[STOP] StopAll, broadcast threadcond err");
+		return;
+	}
+
+	auto pos = m_threadVector.begin();
+	for(;pos<m_threadVector.end();pos++)
+	{
+		pthread_join((*pos)->_Handle, NULL);
+	}
+
+	pthread_mutex_destroy(&m_pthreadMutex);
+	pthread_cond_destroy(&m_pthreadCond);
+
+	for(pos = m_threadVector.begin();pos<m_threadVector.end();pos++)
+	{
+		if(*pos)
+			delete *pos;
+	}
+	m_threadVector.clear();
+
+	log(LOG,"[STOP] StopAll succ");
+	return;
+}
