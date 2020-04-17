@@ -15,13 +15,21 @@ typedef struct
 {
 	char playerAccount[20];
 	char playerPwd[8];
+	char playerName[20];
 
 }MSGSTR_PT_PLY_REGIST,*LPMSGSTR_PT_PLY_REGIST;
+
+typedef struct _STRU_PLY_INFO
+{
+	unsigned short playerLevel;
+}OBJSTRU_PLY_INFO,*LPOBJSTRU_PLY_INFO;
 
 typedef struct
 {
 	unsigned int playerId;
 	char playerAccount[20];
+	char playerName[20];
+	LPOBJSTRU_PLY_INFO playerInfo;
 
 }MSGSTR_ST_PLY_REGIST,*LPMSGSTR_ST_PLY_REGIST;
 

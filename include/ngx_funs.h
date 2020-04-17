@@ -11,6 +11,9 @@ typedef struct{
 void testDefFun();
 char* trimStrLeft(char* s,int len,const char c);
 void trimStrRight(char* s,int len,const char c);
+char* trimStr(char* s, const char c);
+char* trimStr(char* s);
+bool checkStr(char* s, int len);
 
 void title_move_environ();
 void title_set(const char* title);
