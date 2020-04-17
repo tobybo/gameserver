@@ -50,7 +50,8 @@ bool CSocket::setnonblocking(int sockfd){
 
 bool CSocket::Initialize(){
 	ReadConf();
-	return open_listening_sockets();
+	return true;
+	//return open_listening_sockets(); 每个进程单独执行 避免惊群
 }
 
 bool CSocket::open_listening_sockets(){
@@ -73,6 +74,12 @@ bool CSocket::open_listening_sockets(){
 		int reuseaddr = 1;
 		if(setsockopt(isock,SOL_SOCKET,SO_REUSEADDR,(const void*) &reuseaddr, sizeof(reuseaddr)) == -1){
 			log(ERROR,"[SOCKET] open_listening_sockets setopt err, num: %d",i);
+			close(isock);
+			return false;
+		}
+		//避免惊群
+		if(setsockopt(isock,SOL_SOCKET,SO_REUSEPORT,(const void*) &reuseaddr, sizeof(reuseaddr)) == -1){
+			log(ERROR,"[SOCKET] open_listening_sockets setopt1 err, num: %d",i);
 			close(isock);
 			return false;
 		}

@@ -70,6 +70,12 @@ void proc_child_init(){
 		log(ERROR,"[PROC] proc_child_init setmask err");
 	}
 
+	//建立监听套接字
+	if(g_socket.open_listening_sockets()==false)
+    {
+		exit(-4);
+    }
+
 	//初始化数据库连接
 	CDbconn::GetInstance();
 

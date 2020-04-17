@@ -97,13 +97,16 @@ public:
 						 int baction,
 						 lp_connection_t pConn);
 
+	//打开监听套接字
+	bool open_listening_sockets();
+
 protected:
 	//将要发送的数据放入发送队列
 	void msgSend(char* psendbuf);
 
 private:
 	void ReadConf();
-	bool open_listening_sockets();
+	//bool open_listening_sockets();
 	bool setnonblocking(int sockfd);
 
 	//一些业务处理的handler
