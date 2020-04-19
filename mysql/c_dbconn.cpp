@@ -1,5 +1,6 @@
 #include <mysql.h>
 #include <string>
+#include <pthread.h>
 
 #include "macro.h"
 #include "global.h"
@@ -14,6 +15,7 @@ CDbconn* CDbconn::m_instance = nullptr;
 
 CDbconn::CDbconn()
 {
+	pthread_mutex_init(&m_thread_mutex_db_conn,nullptr);
 	m_free_dbconn = create_db_conns(this);
 }
 
@@ -70,18 +72,23 @@ static LPSTRU_DB_CONN create_db_conns(CDbconn* db_instance)
 
 LPSTRU_DB_CONN CDbconn::getDb()
 {
+	pthread_mutex_lock(&m_thread_mutex_db_conn);
 	LPSTRU_DB_CONN pConn = m_free_dbconn;
 	if(pConn == nullptr)
 	{
+		pthread_mutex_unlock(&m_thread_mutex_db_conn);
 		log(ERROR,"[DBWORK] getDb err, all conns busy!");
 		return pConn;
 	}
 	m_free_dbconn = pConn->next;
+	pthread_mutex_unlock(&m_thread_mutex_db_conn);
 	return pConn;
 }
 
 void CDbconn::freeDb(LPSTRU_DB_CONN pConn)
 {
+	pthread_mutex_lock(&m_thread_mutex_db_conn);
 	pConn->next = m_free_dbconn;
 	m_free_dbconn = pConn;
+	pthread_mutex_unlock(&m_thread_mutex_db_conn);
 }

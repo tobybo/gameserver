@@ -30,6 +30,7 @@ bool CLogicSocket::onPlyaerRgist( lp_connection_t pConn,
 								  char* pPkgBody,
 							      unsigned short iBodyLength)
 {
+	log(LOG,"[LOGIN] onPlyaerRgist start.");
 	LPMSGSTR_PT_PLY_REGIST regist_stru = (LPMSGSTR_PT_PLY_REGIST)pPkgBody;
 	if(regist_stru->playerAccount == nullptr ||
 			regist_stru->playerPwd == nullptr ||
@@ -65,7 +66,8 @@ bool CLogicSocket::onPlyaerRgist( lp_connection_t pConn,
 	}
 
 	CDbopt db_conn;
-	char* sql;
+	char sql[100]={0,};
+	//char* sql;
 	if(sprintf(sql, SQL_CONF[SQL_REGIST_CHECK], account) < 0)
 	{
 		log(ERROR,"[LOGIN] onPlayerRgist error, invalid sql1, account: %s",account);

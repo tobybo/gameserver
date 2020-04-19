@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <mysql.h>
+#include <pthread.h>
 
 typedef struct _STRU_DB_CONN
 {
@@ -45,6 +46,9 @@ public:
 public:
 	LPSTRU_DB_CONN m_free_dbconn;
 	std::vector<LPSTRU_DB_CONN> m_dbconns;
+
+private:
+	pthread_mutex_t m_thread_mutex_db_conn;
 
 private:
 	static CDbconn* m_instance;

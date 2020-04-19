@@ -6,6 +6,7 @@
 #include<stdint.h>
 #include<time.h>
 #include<sys/time.h>
+#include<unistd.h>
 #include"macro.h"
 
 using std::cout;
@@ -176,4 +177,27 @@ bool log_open_file(const std::string& filename){
 void log_close_file(){
 	if(log_fs)
 		log_fs.close();
+}
+
+void log_record_master_pid()
+{
+	pid_t pid = getpid();
+	std::fstream pid_fs;
+    pid_fs.open("gmpid.log",std::fstream::in|std::fstream::out|std::fstream::trunc);
+	pid_fs<<pid;
+	if(pid_fs)
+		pid_fs.close();
+}
+
+/*unix 环境高级编程 条件变量*/
+void maketimeout(struct timespec* tsp, long seconds)
+{
+	struct timeval now;
+
+	gettimeofday(&now, nullptr);
+	tsp->tv_sec = now.tv_sec;
+	tsp->tv_nsec = now.tv_usec * 1000;
+
+	tsp->tv_sec += seconds;
+
 }

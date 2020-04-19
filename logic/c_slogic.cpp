@@ -24,7 +24,8 @@ typedef bool (CLogicSocket::*handler)( lp_connection_t pConn,
 									   char* pPkgBody,
 									   unsigned short iBodyLength);
 
-static std::map<unsigned short,handler> msgMap = {
+typedef std::map<unsigned short,handler> _msgMap;
+static _msgMap msgMap = {
 	//{0x01,NULL},
 	{PT_ON_PLY_REGIST  ,  &CLogicSocket::onPlyaerRgist},
 	{PT_ON_PLY_LOGIN   ,  &CLogicSocket::onPlyaerLogin},
@@ -82,6 +83,9 @@ void CLogicSocket::threadRecvProcFunc(char *pMsgBuf){
 		log(ERROR,"[CLOGIC] threadRecvProcFunc no defiened msg, code: %d",imsgCode);
 		return;
 	}
+
+	//auto iter = msgMap.find(imsgCode);
+	//(this->*(iter->second))(pConn,pMsgHeader,(char*)pPkgBody,pkglen-m_iLenPkgHeader);
 
 	(this->*msgMap[imsgCode])(pConn,pMsgHeader,(char*)pPkgBody,pkglen-m_iLenPkgHeader);
 	return;

@@ -16,6 +16,7 @@
 #include"macro.h"
 #include"config.h"
 #include"c_dbconn.h"
+#include"c_player_mng.h"
 
 using std::cout;
 using std::endl;
@@ -78,6 +79,9 @@ void proc_child_init(){
 
 	//初始化数据库连接
 	CDbconn::GetInstance();
+
+	//初始化玩家管理器
+	CPlayerMng::GetInstance();
 
 	//初始化线程池
 	CConfig *config_instance = CConfig::getInstance();
@@ -156,6 +160,7 @@ int proc_create_childs(){
 	sigemptyset(&set);
 	//设置master进程的名字
     title_set("cb3_master ");
+	log_record_master_pid();
 	for(;;){
 		log(LOG,"[PROC] master_proc is working, pid: %d",getpid());
 		sigsuspend(&set);
