@@ -15,14 +15,15 @@ bool CPlayerMng::m_shutdown = false;
 pthread_mutex_t CPlayerMng::m_mutexOffLinePlayerQueue = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  CPlayerMng::m_condOffLinePlayerQueue  = PTHREAD_COND_INITIALIZER;
 std::atomic<int> CPlayerMng::m_readOffLineCount;
+std::atomic<int> CPlayerMng::m_playerMapCount;
 map<unsigned int,CPlayer_t*> CPlayerMng::m_playerMap;
 std::list<CPlayer_t*> CPlayerMng::m_readyOffLineQueue;
 
 CPlayerMng::CPlayerMng()
 {
 	m_readOffLineCount = 0;
-	log(INFO,"[PLAYER_MNG] threadDelPlayerFun: %d",threadDelPlayerFun);
-	log(INFO,"[PLAYER_MNG] &CPlayerMng::threadDelPlayerFun: %d",&CPlayerMng::threadDelPlayerFun);
+	//log(INFO,"[PLAYER_MNG] threadDelPlayerFun: %d",threadDelPlayerFun);
+	//log(INFO,"[PLAYER_MNG] &CPlayerMng::threadDelPlayerFun: %d",&CPlayerMng::threadDelPlayerFun);
 	int err = pthread_create(&m_pthread_handle, nullptr, threadDelPlayerFun, nullptr);
 	if(err != 0)
 	{
@@ -155,6 +156,7 @@ void* CPlayerMng::threadDelPlayerFun(void *)
 			m_playerMap.erase(m_readyOffLineQueue.front()->getId());
 			m_readyOffLineQueue.pop_front();
 			--m_readOffLineCount;
+			--m_playerMapCount;
 		}
 		err = pthread_mutex_unlock(&m_mutexOffLinePlayerQueue);
 		if(err != 0)

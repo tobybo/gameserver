@@ -111,6 +111,10 @@ int proc_child_circle(int num){
 		//cout<<"child proc: "<<proc_name<<endl;
 		g_socket.epoll_process_events(-1);
 	}
+
+	CPlayerMng* ply_mng = CPlayerMng::GetInstance();
+	ply_mng->stopThread();
+
 	g_threadpool.StopAll();
 	g_socket.Shutdown_subproc();
 

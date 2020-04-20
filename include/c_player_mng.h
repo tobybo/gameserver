@@ -60,7 +60,7 @@ class CPlayerMng
 
 	private:
 		static map<unsigned int,CPlayer_t*> m_playerMap;
-		std::atomic<int> m_playerMapCount;
+		static std::atomic<int> m_playerMapCount;
 		static std::list<CPlayer_t*> m_readyOffLineQueue;
 		static std::atomic<int> m_readOffLineCount;
 		pthread_t m_pthread_handle;
