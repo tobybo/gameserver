@@ -18,9 +18,12 @@
 #include"c_dbconn.h"
 #include"c_player_mng.h"
 
+#include "LuaIntf.h"
+
 using std::cout;
 using std::endl;
 
+void proc_lua_test();
 
 int proc_set_daemon(){
 	switch(fork()){
@@ -106,6 +109,7 @@ int proc_child_circle(int num){
 	log(LOG,"[PROC] worker_proc begin working,num: %d, pid: %d",num,getpid());
 
 	proc_child_init();
+	proc_lua_test();
 
 	for(;;){
 		//cout<<"child proc: "<<proc_name<<endl;
@@ -173,4 +177,22 @@ int proc_create_childs(){
 lblexit:
 	log(ERROR,"[PROC] create_child_proc err!");
 	return -1;
+}
+
+void log_lua_test(std::string &str)
+{
+	log_done(str.c_str());
+}
+
+using namespace LuaIntf;
+void proc_lua_test()
+{
+	log(INFO,"[PROC] proc_lua_test begin.");
+	LuaState lua = LuaState::newState();
+	LuaBinding(lua).beginModule("utils")
+		.addFunction("c_log",&log_lua_test)
+	.endModule();
+	bool ret = lua.doFile("/root/work/repos/gameserver/script/main.lua");
+	log(INFO,"[PROC] proc_lua_test end, ret: %d",ret?1:0);
+
 }

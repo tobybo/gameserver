@@ -22,6 +22,8 @@ void log(u_char level,const char* fmt,...);
 bool log_open_file(const std::string& filename);
 void log_close_file();
 void log_record_master_pid();
+void log_done(const u_char* buff);
+void log_done(std::string buff);
 void maketimeout(struct timespec* tsp, long seconds);
 
 int proc_set_daemon();

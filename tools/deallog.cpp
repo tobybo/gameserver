@@ -8,6 +8,7 @@
 #include<sys/time.h>
 #include<unistd.h>
 #include"macro.h"
+#include"config.h"
 
 using std::cout;
 using std::endl;
@@ -133,9 +134,10 @@ u_char* log_format_str(size_t len,const char* fmt,...){
 }
 
 void log(u_char level,const char* fmt,...){
-	u_char *buff = new u_char[1025];
+	//u_char *buff = new u_char[1025];
+	static u_char buff[1025];
 	u_char *start;
-	u_char *end = buff+1025; //预留一个位置可以放下'\0'
+	u_char *end = buff+1024; //预留一个位置可以放下'\0'
 	size_t len_node = strlen((const char *)error_level[level]);
 	start = my_memcpy(buff,error_level[level],len_node);
 
@@ -165,8 +167,29 @@ void log(u_char level,const char* fmt,...){
     /*c++98 void open (const   char* filename,  ios_base::openmode mode = ios_base::in);*/
     /*c++11特性 void open (const string& filename,  ios_base::openmode mode = ios_base::in);*/
 
+	log_done(buff);
+}
+
+void log_done(const u_char* buff)
+{
 	log_fs<<buff<<endl;
 
+	CConfig* config_instance = CConfig::getInstance();
+	if(std::stoi((*config_instance)["DAEMON"]) == 0)
+	{
+		std::cout<<buff<<std::endl;
+	}
+}
+
+void log_done(std::string buff)
+{
+	log_fs<<buff.c_str()<<endl;
+
+	CConfig* config_instance = CConfig::getInstance();
+	if(std::stoi((*config_instance)["DAEMON"]) == 0)
+	{
+		std::cout<<buff.c_str()<<std::endl;
+	}
 }
 
 bool log_open_file(const std::string& filename){
