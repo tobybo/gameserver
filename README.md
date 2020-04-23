@@ -1,5 +1,5 @@
 # gameserver
-gameserver/linux/c++/nginx/epoll
+gameserver/linux/c++/lua/nginx/epoll
 
 _viewlib:
     just for view.
