@@ -127,7 +127,7 @@ void CThreadPool::inMsgRecvQueueAndSignal(char *buf)
 	if(err != 0)
 		log(ERROR,"[THREAD_POOL] inMsgRecvQueueAndSignal unlock err, buff: %s",buf);
 
-	Call();
+	//Call(); 改成lua主动来取
 	return;
 }
 
@@ -184,3 +184,5 @@ void CThreadPool::StopAll()
 	log(LOG,"[STOP] StopAll succ");
 	return;
 }
+
+

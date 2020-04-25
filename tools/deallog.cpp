@@ -181,7 +181,7 @@ void log_done(const u_char* buff)
 	}
 }
 
-void log_done(std::string buff)
+void log_done(std::string& buff)
 {
 	log_fs<<buff.c_str()<<endl;
 
@@ -190,6 +190,11 @@ void log_done(std::string buff)
 	{
 		std::cout<<buff.c_str()<<std::endl;
 	}
+}
+
+void log_lua_test(std::string &str)
+{
+	log_done(str);
 }
 
 bool log_open_file(const std::string& filename){

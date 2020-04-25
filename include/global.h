@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <c_threadpool.h>
 #include <c_slogic.h>
+#include <c_logic_lua.h>
 
 extern char **g_os_arg;
 extern char *gp_envmem;
@@ -19,6 +20,7 @@ extern sig_atomic_t proc_reap;
 
 extern CLogicSocket g_socket;
 extern CThreadPool g_threadpool;
+extern CLogicLua g_logicLua;
 
 extern int g_stopEvent;
 

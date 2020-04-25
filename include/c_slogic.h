@@ -27,6 +27,9 @@ public:
 
 public:
 	virtual void threadRecvProcFunc(char *pMsgBuf);
+public:
+	int getJobBuff(char*& jobbuff, int& jobpos);
+
 };
 
 #endif

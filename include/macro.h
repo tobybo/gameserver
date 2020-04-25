@@ -4,6 +4,8 @@
 #define MAX_UINT32 (uint32_t) 0xffffffff
 #define MAX_INT64 (sizeof("-9223372036854775808")-1)
 
+#define u_int unsigned int
+
 #define ERROR 0
 #define LOG   1
 #define INFO  2

@@ -32,8 +32,8 @@ private:
 		~ThreadItem(){}
 	};
 
+
 private:
-	static pthread_mutex_t m_pthreadMutex; //互斥量
 	static pthread_cond_t  m_pthreadCond;  //条件变量
 	static bool            m_shutdown;     //线程退出标志 false 不退出
 
@@ -44,6 +44,8 @@ private:
 
 	std::vector<ThreadItem *> m_threadVector; //线程结构数组
 
+public:
+	static pthread_mutex_t m_pthreadMutex; //互斥量
 	std::list<char*>       m_MsgRecvQueue; //接收数据消息队列
 	int                    m_iRecvMsgQueueCount; //接收消息队列大小
 };

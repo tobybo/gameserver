@@ -17,6 +17,7 @@
 #include"config.h"
 #include"c_dbconn.h"
 #include"c_player_mng.h"
+#include"c_logic_lua.h"
 
 #include "LuaIntf.h"
 
@@ -86,13 +87,13 @@ void proc_child_init(){
 	//初始化玩家管理器
 	CPlayerMng::GetInstance();
 
-	//初始化线程池
-	CConfig *config_instance = CConfig::getInstance();
-	int thread_count = stoi((*config_instance)["LOGIC_THREAD_COUNT"]);
-	if(!g_threadpool.Create(thread_count)){
-		exit(-2);
-	}
-	sleep(1);
+	//初始化线程池 用lua取消息 这里多线程没意义了
+	/*CConfig *config_instance = CConfig::getInstance();*/
+	//int thread_count = stoi((*config_instance)["LOGIC_THREAD_COUNT"]);
+	//if(!g_threadpool.Create(thread_count)){
+		//exit(-2);
+	/*}*/
+	//sleep(1);
 	//socket init sub
 	if(g_socket.Initialize_subporc() == false){
 		exit(-2);
@@ -103,13 +104,18 @@ void proc_child_init(){
 	return;
 }
 
+void proc_lua_init()
+{
+	g_logicLua.init();
+}
+
 int proc_child_circle(int num){
 	string proc_name = "cb3_worker_"+std::to_string(num)+" ";
 	title_set(proc_name.c_str());
 	log(LOG,"[PROC] worker_proc begin working,num: %d, pid: %d",num,getpid());
 
 	proc_child_init();
-	proc_lua_test();
+	proc_lua_init();
 
 	for(;;){
 		//cout<<"child proc: "<<proc_name<<endl;
@@ -179,20 +185,3 @@ lblexit:
 	return -1;
 }
 
-void log_lua_test(std::string &str)
-{
-	log_done(str.c_str());
-}
-
-using namespace LuaIntf;
-void proc_lua_test()
-{
-	log(INFO,"[PROC] proc_lua_test begin.");
-	LuaState lua = LuaState::newState();
-	LuaBinding(lua).beginModule("utils")
-		.addFunction("c_log",&log_lua_test)
-	.endModule();
-	bool ret = lua.doFile("/root/work/repos/gameserver/script/main.lua");
-	log(INFO,"[PROC] proc_lua_test end, ret: %d",ret?1:0);
-
-}

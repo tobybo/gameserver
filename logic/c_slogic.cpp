@@ -115,3 +115,53 @@ void CLogicSocket::msgSend(lp_connection_t pConn,unsigned short msgCode,char* pP
 	this->CSocket::msgSend(psendbuf);
 }
 
+int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
+{
+	if(g_threadpool.m_iRecvMsgQueueCount <= 0)
+		return 0;
+
+	char* pMsgBuf = g_threadpool.m_MsgRecvQueue.front();
+	jobpos = m_iLenMsgHeader + m_iLenPkgHeader;
+
+	LPSTRUC_MSG_HEADER pMsgHeader = (LPSTRUC_MSG_HEADER)pMsgBuf;
+	LPCOMM_PKG_HEADER  pPkgHeader = (LPCOMM_PKG_HEADER)(pMsgBuf + m_iLenMsgHeader);
+	void* pPkgBody;
+	unsigned short pkglen = ntohs(pPkgHeader->pkgLen);
+
+	if(m_iLenPkgHeader == pkglen)
+	{
+		if(pPkgHeader->crc32 != 0)
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		pPkgBody = (void*)(pMsgBuf + jobpos);
+		int calccrc = CCRC32::GetInstance()->Get_CRC((unsigned char*)pPkgBody, pkglen - m_iLenPkgHeader);
+		if(calccrc != ntohl(pPkgHeader->crc32))
+		{
+			log(ERROR,"[CRC32] threadRecvProcFunc crc32 err");
+			return 0;
+		}
+	}
+
+	unsigned short imsgCode = ntohs(pPkgHeader->msgCode);
+	lp_connection_t pConn = pMsgHeader->pConn;
+
+	if(pConn->iCurrsequence != pMsgHeader->iCurrsequence)
+	{
+		return 0; //连接已经被废弃或者复用了 丢弃该类包
+	}
+
+	g_threadpool.m_MsgRecvQueue.pop_front();
+	--g_threadpool.m_iRecvMsgQueueCount;
+
+	int err = pthread_mutex_unlock(&g_threadpool.m_pthreadMutex);
+	if(err != 0)
+	{
+		return -1;
+	}
+	jobbuff = pMsgBuf;
+	return imsgCode;
+}
