@@ -6,13 +6,23 @@
 #include "config.h"
 #include "c_dbconn.h"
 #include "c_player_mng.h"
+#include "c_threadpool.h"
 
 #include <pthread.h>
+#include <sys/unistd.h>
+#include <sys/time.h>
 
 #include <string>
 #include <sstream>
 
 #include "LuaIntf.h"
+
+int gOn;
+int gFrame;
+int gTime; //timestamp
+unsigned long gMsec; //ms
+static const int gFrameTime = 50;  // ms per frame
+static const int gFrameCount = 20; // frames per sec
 
 void* luaintf_binding_and_run(void*);
 
@@ -20,8 +30,14 @@ void CLogicLua::init()
 {
 	m_lua = LuaIntf::LuaState::newState();
 	m_lua.openLibs();
+	gOn = 1;
 	pthread_t pthread_handle;
 	int ret = pthread_create(&pthread_handle,nullptr,luaintf_binding_and_run,nullptr);
+	if(0 != ret )
+	{
+		log(ERROR,"[LUAINTF] CLogicLua, pthread_create err, ret: %d",ret);
+	}
+	ret = pthread_create(&pthread_handle,nullptr,threadLoopTime,nullptr);
 	if(0 != ret )
 	{
 		log(ERROR,"[LUAINTF] CLogicLua, pthread_create err, ret: %d",ret);
@@ -57,6 +73,31 @@ void* luaintf_binding_and_run(void*)
 	{
 		std::string errstr = g_logicLua.stackDump();
 		log(ERROR,errstr.c_str());
+	}
+	else
+	{
+		unsigned long curmsec,mHead,mOver;
+		struct timeval tv_next;
+		long nsleep;
+		while(!gTime) sleep(1);
+		gFrame = 0;
+		while(gOn)
+		{
+			curmsec = gMsec;
+			mHead = curmsec - curmsec % gFrameTime;
+			mOver = mHead + gFrameTime;
+			if(curmsec - mHead > mOver - curmsec) mOver += gFrameTime;
+			gFrame++;
+			g_logicLua.doLuaLoop();
+			nsleep = mOver - gMsec;
+			if(nsleep > 0)
+			{
+				nsleep = nsleep > gFrameTime? gFrameTime:nsleep;
+				tv_next.tv_sec = 0;
+				tv_next.tv_usec = nsleep * 1000;
+				select(0, nullptr, nullptr, nullptr, &tv_next);
+			}
+		}
 	}
 	log(INFO,"[PROC] proc_lua_test end, ret: %d",ret?1:0);
 	return (void*)0;
@@ -108,6 +149,37 @@ std::string CLogicLua::stackDump()
 
 	}
 	return allInfo;
-
 }
 
+void* CLogicLua::threadLoopTime(void*)
+{
+	while(gOn)
+	{
+		static struct timeval tv_now;
+		struct timeval tv_out;
+		gettimeofday(&tv_now, nullptr);
+		tv_out.tv_sec = 0;
+		tv_out.tv_usec = 1000 - tv_now.tv_usec % 1000;
+		select(0, nullptr, nullptr, nullptr, &tv_out);
+		gettimeofday(&tv_now, nullptr);
+		gTime = tv_now.tv_sec;
+		gMsec = gTime * 1000 + tv_now.tv_usec * 0.001;
+	}
+	return (void*)0;
+}
+
+void CLogicLua::doLuaLoop()
+{
+	int msgCount = g_threadpool.m_iRecvMsgQueueCount;
+	if(msgCount > 0)
+	{
+		try{
+			m_luaref = LuaIntf::LuaRef(m_lua, "main_loop");
+			m_luaref(msgCount);
+		}
+		catch(LuaIntf::LuaException(m_lua))
+		{
+			log(ERROR,"[LUA_EXCEPTION] info: %s",LuaIntf::LuaException(m_lua).what());
+		}
+	}
+}

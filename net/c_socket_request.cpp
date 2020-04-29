@@ -194,7 +194,7 @@ void CSocket::wait_request_handler_proc_p1(lp_connection_t pConn)
 void CSocket::wait_request_handler_proc_last(lp_connection_t pConn)
 {
 	//收到完整包 可以加入消息队列 唤醒逻辑线程处理具体业务
-	log(INFO,"[RECVPKG] wait_request_handler_proc_last succ, buff: %s",pConn->precvMemPointer);
+	log(INFO,"[RECVPKG] wait_request_handler_proc_last succ");
 	g_threadpool.inMsgRecvQueueAndSignal(pConn->precvMemPointer);
 	pConn->precvMemPointer = nullptr;
 	pConn->curStat = _PKG_HD_INIT;

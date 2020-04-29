@@ -1,4 +1,5 @@
 #include <string>
+#include <tuple>
 #include <stdarg.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -14,6 +15,20 @@
 #include "c_dbconn.h"
 #include "c_player_mng.h"
 
+CLuaUtils::CLuaUtils()
+{
+	m_jobbuff = nullptr;
+	m_jobpos = 0;
+	//log(INFO,"[LUA_UTILS] CLuaUtils");
+}
+
+CLuaUtils::CLuaUtils(std::string&)
+{
+	m_jobbuff = nullptr;
+	m_jobpos = 0;
+	//log(INFO,"[LUA_UTILS] CLuaUtils string");
+}
+
 CLuaUtils::~CLuaUtils()
 {
 	freeJobbuff();
@@ -28,25 +43,29 @@ int CLuaUtils::getMsgCount()
 {
 	if(g_threadpool.m_iRecvMsgQueueCount <= 0)
 		return 0;
-	int err = pthread_mutex_lock(&g_threadpool.m_pthreadMutex);
-	if(err != 0)
-	{
-		return -1;
-	}
 	return g_threadpool.m_iRecvMsgQueueCount;
 }
 
-unsigned short CLuaUtils::getMsgInfo()
+std::tuple<unsigned short, int, uint64_t> CLuaUtils::getMsgInfo()
 {
 	freeJobbuff();
-	int imsgCode = g_socket.getJobBuff(m_jobbuff, m_jobpos);
-	if(imsgCode <= 0)
+	unsigned short imsgCode(0);
+	int socketid(0);
+	uint64_t icq(0);
+	int ret = g_socket.getJobBuff(m_jobbuff, m_jobpos);
+	if(ret <= 0)
 	{
-		m_jobbuff = nullptr;
-		m_jobpos = 0;
-		return imsgCode;
+		freeJobbuff();
 	}
-	return imsgCode;
+	else
+	{
+		imsgCode = (unsigned short)ret;
+		LPSTRUC_MSG_HEADER pMsgHeader = (LPSTRUC_MSG_HEADER)m_jobbuff;
+		icq = pMsgHeader->iCurrsequence;
+		socketid = pMsgHeader->pConn->fd;
+	}
+	auto tp = std::make_tuple(imsgCode,socketid,icq);
+	return tp;
 }
 
 void CLuaUtils::freeJobbuff()
@@ -56,8 +75,8 @@ void CLuaUtils::freeJobbuff()
 		CMemory* mem_instance = CMemory::GetInstance();
 		mem_instance->FreeMemory(m_jobbuff);
 		m_jobbuff = nullptr;
-		m_jobpos = 0;
 	}
+	m_jobpos = 0;
 }
 
 std::string CLuaUtils::readString()

@@ -1,6 +1,7 @@
 #ifndef _C_SLOGIC_H_
 #define _C_SLOGIC_H_
 
+#include <map>
 #include "c_socket.h"
 
 class CLogicSocket : public CSocket
@@ -29,7 +30,14 @@ public:
 	virtual void threadRecvProcFunc(char *pMsgBuf);
 public:
 	int getJobBuff(char*& jobbuff, int& jobpos);
+	void addConn(LPSTRUC_MSG_HEADER pMsgHeader);
+	void addConn(lp_connection_t pConn);
+	void delConn(LPSTRUC_MSG_HEADER pMsgHeader); //自己释放pMsgHeader
+	void delConn(lp_connection_t pConn);
+	void delConn(int sockid);
 
+private:
+	std::map<int,LPSTRUC_MSG_HEADER> m_socketConnMap;
 };
 
 #endif

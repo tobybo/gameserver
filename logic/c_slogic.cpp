@@ -117,12 +117,23 @@ void CLogicSocket::msgSend(lp_connection_t pConn,unsigned short msgCode,char* pP
 
 int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 {
+	int err = pthread_mutex_lock(&g_threadpool.m_pthreadMutex);
+	if(err != 0)
+	{
+		return -1;
+	}
 	if(g_threadpool.m_iRecvMsgQueueCount <= 0)
 		return 0;
-
 	char* pMsgBuf = g_threadpool.m_MsgRecvQueue.front();
+	g_threadpool.m_MsgRecvQueue.pop_front();
+	--g_threadpool.m_iRecvMsgQueueCount;
+	jobbuff = pMsgBuf;
 	jobpos = m_iLenMsgHeader + m_iLenPkgHeader;
-
+	err = pthread_mutex_unlock(&g_threadpool.m_pthreadMutex);
+	if(err != 0)
+	{
+		return -1;
+	}
 	LPSTRUC_MSG_HEADER pMsgHeader = (LPSTRUC_MSG_HEADER)pMsgBuf;
 	LPCOMM_PKG_HEADER  pPkgHeader = (LPCOMM_PKG_HEADER)(pMsgBuf + m_iLenMsgHeader);
 	void* pPkgBody;
@@ -154,14 +165,38 @@ int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 		return 0; //连接已经被废弃或者复用了 丢弃该类包
 	}
 
-	g_threadpool.m_MsgRecvQueue.pop_front();
-	--g_threadpool.m_iRecvMsgQueueCount;
 
-	int err = pthread_mutex_unlock(&g_threadpool.m_pthreadMutex);
-	if(err != 0)
-	{
-		return -1;
-	}
-	jobbuff = pMsgBuf;
 	return imsgCode;
+}
+
+void CLogicSocket::addConn(LPSTRUC_MSG_HEADER pMsgHeader)
+{
+	delConn(pMsgHeader->pConn->fd);
+	m_socketConnMap[pMsgHeader->pConn->fd] = pMsgHeader;
+}
+
+void CLogicSocket::delConn(LPSTRUC_MSG_HEADER pMsgHeader)
+{
+	if(m_socketConnMap.find(pMsgHeader->pConn->fd) != m_socketConnMap.end())
+	{
+		delete m_socketConnMap[pMsgHeader->pConn->fd];
+		m_socketConnMap.erase(pMsgHeader->pConn->fd);
+	}
+}
+
+void CLogicSocket::addConn(lp_connection_t pConn)
+{
+	delConn(pConn->fd);
+	LPSTRUC_MSG_HEADER pMsgHeader = new STRUC_MSG_HEADER;
+	pMsgHeader->pConn = pConn;
+	pMsgHeader->iCurrsequence = pConn->iCurrsequence;
+	m_socketConnMap[pConn->fd] = pMsgHeader;
+}
+
+void CLogicSocket::delConn(int sockid)
+{
+	if(m_socketConnMap.find(sockid) != m_socketConnMap.end())
+	{
+		m_socketConnMap.erase(sockid);
+	}
 }

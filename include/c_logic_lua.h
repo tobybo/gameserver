@@ -17,8 +17,12 @@ class CLogicLua
 
 	public:
 		std::string stackDump();
+		static void* threadLoopTime(void*);
+		void doLuaLoop();
+
 	private:
 		LuaIntf::LuaState m_lua;
+		LuaIntf::LuaRef m_luaref;
 };
 
 #endif

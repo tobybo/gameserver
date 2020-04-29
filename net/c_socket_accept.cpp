@@ -93,6 +93,7 @@ void CSocket::event_accept(lp_connection_t oldc)
 			closeconnection(new_pConn);
 			return;
 		}
+		g_socket.addConn(new_pConn);
 		break;
 	}while(1);
 
