@@ -165,13 +165,12 @@ int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 		return 0; //连接已经被废弃或者复用了 丢弃该类包
 	}
 
-
 	return imsgCode;
 }
 
 void CLogicSocket::addConn(LPSTRUC_MSG_HEADER pMsgHeader)
 {
-	delConn(pMsgHeader->pConn->fd);
+	//delConn(pMsgHeader->pConn->fd);
 	m_socketConnMap[pMsgHeader->pConn->fd] = pMsgHeader;
 }
 
@@ -186,7 +185,7 @@ void CLogicSocket::delConn(LPSTRUC_MSG_HEADER pMsgHeader)
 
 void CLogicSocket::addConn(lp_connection_t pConn)
 {
-	delConn(pConn->fd);
+	//delConn(pConn->fd);
 	LPSTRUC_MSG_HEADER pMsgHeader = new STRUC_MSG_HEADER;
 	pMsgHeader->pConn = pConn;
 	pMsgHeader->iCurrsequence = pConn->iCurrsequence;

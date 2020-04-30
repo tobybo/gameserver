@@ -35,7 +35,8 @@ void connection_s::getOneToUse(){
 	precvbuf = dataHeadInfo;
 
 	precvMemPointer = nullptr;
-
+	psendMemPointer = nullptr;
+	iThrowsendCount = 0;
 
 	events = 0;
 }
@@ -58,11 +59,12 @@ lp_connection_t CSocket::create_one_connection()
 //初始化连接池
 void CSocket::initconnection(){
 	lp_connection_t p_Conn;
-	size_t lenConns = sizeof(connection_s);
+	size_t lenConns = sizeof(connection_t);
 	CMemory* mem_instance = CMemory::GetInstance();
 	for(int i = 0;i <= m_worker_connections;i++)
 	{
 		p_Conn = (lp_connection_t)mem_instance->AllocMemory(lenConns,true);
+		p_Conn->connection_s();
 		p_Conn->getOneToUse();
 		m_connectionList.push_back(p_Conn);
 		m_freeconnectionList.push_back(p_Conn);
