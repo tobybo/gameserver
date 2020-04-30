@@ -1,6 +1,5 @@
 --require "gamesvr.lua"
 
-
 c_lib = utils()
 log = function(form,...)
 	local args = {...}
@@ -23,10 +22,11 @@ function do_threadpk(msg_count)
 				log("[   get one msg, code: %d, dpid: %s, icq: %s ]",msg_code,tostring(dpid),tostring(icq))
 				local msg = c_lib:readString()
 				log("[   msg info: %s ]",msg)
-				msg = c_lib:readString()
+				msg = c_lib:readInt()
 				log("[   msg info: %s ]",msg)
 				msg = c_lib:readString()
 				log("[   msg info: %s ]",msg)
+				test_write(dpid, icq)
 			else
 				log("lua_error: msg_count > 0 but no msginfo")
 			end
@@ -34,4 +34,13 @@ function do_threadpk(msg_count)
 	end
 end
 
+function test_write(dpid, icq)
+	c_lib:flushSendBuff();
+	c_lib:writeString("is toby");
+	c_lib:writeInt(26);
+	c_lib:writeByte(100);
+	c_lib:writeUInt(123456789);
+	c_lib:writeUByte(200);
+	c_lib:sendMsg(4096,dpid,icq);
+end
 --loop()

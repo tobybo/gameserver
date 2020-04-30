@@ -53,7 +53,9 @@ void* luaintf_binding_and_run(void*)
 		//.addStaticProperty("home_url", &Web::home_url, &Web::set_home_url)
 		//.addStaticFunction("go_home", &Web::go_home)
 		//.addProperty("url", &Web::url, &Web::set_url)
+		//日志
 		.addFunction("log", &CLuaUtils::utils_log)
+		//读消息
 		.addFunction("getMsgCount", &CLuaUtils::getMsgCount)
 		.addFunction("getMsgInfo", &CLuaUtils::getMsgInfo)
 		.addFunction("readString", &CLuaUtils::readString)
@@ -61,6 +63,14 @@ void* luaintf_binding_and_run(void*)
 		.addFunction("readByte", &CLuaUtils::readByte)
 		.addFunction("readUInt", &CLuaUtils::readUInt)
 		.addFunction("readUByte", &CLuaUtils::readUByte)
+		//写消息
+		.addFunction("flushSendBuff", &CLuaUtils::flushSendBuff)
+		.addFunction("sendMsg", &CLuaUtils::sendMsg)
+		.addFunction("writeString", &CLuaUtils::writeString)
+		.addFunction("writeInt", &CLuaUtils::writeInt)
+		.addFunction("writeByte", &CLuaUtils::writeByte)
+		.addFunction("writeUInt", &CLuaUtils::writeUInt)
+		.addFunction("writeUByte", &CLuaUtils::writeUByte)
 		//.addFunction("load", &Web::load, LUA_ARGS(_opt<std::string>))
 		//.addStaticFunction("lambda", [] {
 				// you can use C++11 lambda expression here too

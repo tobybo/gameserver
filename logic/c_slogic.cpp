@@ -168,34 +168,34 @@ int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 	return imsgCode;
 }
 
-void CLogicSocket::addConn(LPSTRUC_MSG_HEADER pMsgHeader)
-{
-	//delConn(pMsgHeader->pConn->fd);
-	m_socketConnMap[pMsgHeader->pConn->fd] = pMsgHeader;
-}
+/*void CLogicSocket::addConn(LPSTRUC_MSG_HEADER pMsgHeader)*/
+//{
+	////delConn(pMsgHeader->pConn->fd);
+	//m_socketConnMap[pMsgHeader->pConn->fd] = pMsgHeader;
+//}
 
-void CLogicSocket::delConn(LPSTRUC_MSG_HEADER pMsgHeader)
-{
-	if(m_socketConnMap.find(pMsgHeader->pConn->fd) != m_socketConnMap.end())
-	{
-		delete m_socketConnMap[pMsgHeader->pConn->fd];
-		m_socketConnMap.erase(pMsgHeader->pConn->fd);
-	}
-}
+//void CLogicSocket::delConn(LPSTRUC_MSG_HEADER pMsgHeader)
+//{
+	//if(m_socketConnMap.find(pMsgHeader->pConn->fd) != m_socketConnMap.end())
+	//{
+		//delete m_socketConnMap[pMsgHeader->pConn->fd];
+		//m_socketConnMap.erase(pMsgHeader->pConn->fd);
+	//}
+//}
 
-void CLogicSocket::addConn(lp_connection_t pConn)
-{
-	//delConn(pConn->fd);
-	LPSTRUC_MSG_HEADER pMsgHeader = new STRUC_MSG_HEADER;
-	pMsgHeader->pConn = pConn;
-	pMsgHeader->iCurrsequence = pConn->iCurrsequence;
-	m_socketConnMap[pConn->fd] = pMsgHeader;
-}
+//void CLogicSocket::addConn(lp_connection_t pConn)
+//{
+	////delConn(pConn->fd);
+	//LPSTRUC_MSG_HEADER pMsgHeader = new STRUC_MSG_HEADER;
+	//pMsgHeader->pConn = pConn;
+	//pMsgHeader->iCurrsequence = pConn->iCurrsequence;
+	//m_socketConnMap[pConn->vIndex] = pMsgHeader;
+//}
 
-void CLogicSocket::delConn(int sockid)
-{
-	if(m_socketConnMap.find(sockid) != m_socketConnMap.end())
-	{
-		m_socketConnMap.erase(sockid);
-	}
-}
+//void CLogicSocket::delConn(int _idx)
+//{
+	//if(m_socketConnMap.find(_idx) != m_socketConnMap.end())
+	//{
+		//m_socketConnMap.erase(_idx);
+	//}
+/*}*/

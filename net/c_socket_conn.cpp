@@ -18,8 +18,9 @@
 
 using std::string;
 
-connection_s::connection_s(){
+connection_s::connection_s(int _idx){
 	iCurrsequence = 0;
+	vIndex = _idx;
 	pthread_mutex_init(&logicPorcMutex,NULL);
 }
 
@@ -46,14 +47,24 @@ void connection_s::putOneToFree(){
 }
 
 //---------------------------------
-lp_connection_t CSocket::create_one_connection()
+lp_connection_t CSocket::create_one_connection(int _idx)
 {
 	lp_connection_t p_Conn;
 	CMemory* mem_instance = CMemory::GetInstance();
 	p_Conn = (lp_connection_t)mem_instance->AllocMemory(sizeof(connection_s),true);
-	p_Conn = new(p_Conn) connection_s();
+	p_Conn = new(p_Conn) connection_s(_idx);
 	//p_Conn->connection_s();
 	return p_Conn;
+}
+
+lp_connection_t CSocket::get_used_connection(int _idx)
+{
+	if(m_connectionList.size() <= _idx)
+	{
+		log(ERROR,"[SOCKET] get_used_connection, erridx, idx: %d",_idx);
+		return nullptr;
+	}
+	return m_connectionList[_idx];
 }
 
 //初始化连接池
@@ -63,8 +74,7 @@ void CSocket::initconnection(){
 	CMemory* mem_instance = CMemory::GetInstance();
 	for(int i = 0;i <= m_worker_connections;i++)
 	{
-		p_Conn = (lp_connection_t)mem_instance->AllocMemory(lenConns,true);
-		p_Conn->connection_s();
+		p_Conn = create_one_connection(i);
 		p_Conn->getOneToUse();
 		m_connectionList.push_back(p_Conn);
 		m_freeconnectionList.push_back(p_Conn);
@@ -79,7 +89,7 @@ void CSocket::clearconnection(){
 	while(!m_connectionList.empty())
 	{
 		p_Conn = m_connectionList.front();
-		m_connectionList.pop_front();
+		m_connectionList.pop_back();
 		p_Conn->~connection_s();
 		mem_instance->FreeMemory(p_Conn);
 	}
@@ -98,7 +108,7 @@ lp_connection_t CSocket::get_connection(int isock)
 		p_Conn->fd = isock;
 		return p_Conn;
 	}
-	p_Conn = create_one_connection();
+	p_Conn = create_one_connection(m_connectionList.size());
 	p_Conn->getOneToUse();
 	m_connectionList.push_back(p_Conn);
 	++m_total_connection_n;

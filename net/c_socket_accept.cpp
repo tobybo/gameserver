@@ -93,7 +93,7 @@ void CSocket::event_accept(lp_connection_t oldc)
 			closeconnection(new_pConn);
 			return;
 		}
-		g_socket.addConn(new_pConn);
+		//g_socket.addConn(new_pConn); 连接池从list改成数组后 可以直接用索引查找
 		break;
 	}while(1);
 

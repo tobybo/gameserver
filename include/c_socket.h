@@ -31,7 +31,7 @@ struct listening_s
 
 struct connection_s
 {
-	connection_s();
+	connection_s(int);
 	virtual ~connection_s();
 	void getOneToUse();
 	void putOneToFree();
@@ -61,6 +61,7 @@ struct connection_s
 	char* psendMemPointer;
 	char* psendbuf;
 	unsigned int isendlen;
+	int vIndex; //连接池数组的索引 用于发包时锁定一个连接
 
 	//回收相关
 	time_t iRecyTime; //放到回收队列的时间
@@ -100,6 +101,9 @@ public:
 	//打开监听套接字
 	bool open_listening_sockets();
 
+	//发包时直接从连接池查对应连接
+	lp_connection_t get_used_connection(int _idx);
+
 protected:
 	//将要发送的数据放入发送队列
 	void msgSend(char* psendbuf);
@@ -124,7 +128,7 @@ private:
 	ssize_t sendproc(lp_connection_t,char*,ssize_t);
 
 	//连接池或者连接相关
-	lp_connection_t create_one_connection();
+	lp_connection_t create_one_connection(int);
 	void initconnection();
 	void clearconnection();
 	void closeconnection(lp_connection_t);
@@ -159,7 +163,7 @@ private:
 	struct epoll_event m_events[MAX_EVENTS];
 
 	//连接相关变量
-	std::list<lp_connection_t> m_connectionList; //连接列表[连接池]
+	std::vector<lp_connection_t> m_connectionList; //连接列表[连接池]
 	std::list<lp_connection_t> m_freeconnectionList; //空闲连接列表[连接池]
 	std::list<lp_connection_t> m_recyconnectionList; //回收连接列表[连接池]
 	std::atomic<int> m_total_connection_n; //连接池总连接数
