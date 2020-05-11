@@ -1,6 +1,8 @@
 #ifndef _MACRO_H_
 #define _MACRO_H_
 
+#include<bsoncxx/builder/stream/document.hpp>
+
 #define MAX_UINT32 (uint32_t) 0xffffffff
 #define MAX_INT64 (sizeof("-9223372036854775808")-1)
 
@@ -14,5 +16,7 @@
 #define WORKER_PROC 1 //工作进程
 
 #define my_memcpy(dst,src,n) ( ((u_char*)memcpy(dst,src,n)) + (n))
+
+typedef bsoncxx::builder::stream::document bsdocument;
 
 #endif

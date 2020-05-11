@@ -1,1 +1,1 @@
-make clean && make
+make clean && make > /dev/null

@@ -19,6 +19,7 @@ class CLogicLua
 		std::string stackDump();
 		static void* threadLoopTime(void*);
 		void doLuaLoop();
+		int getDbResCount();
 
 	private:
 		LuaIntf::LuaState m_lua;

@@ -36,8 +36,7 @@ CSocket::~CSocket(){
 
 void CSocket::ReadConf(){
 	CConfig *config_instance = CConfig::getInstance();
-	m_ListenPortCount = std::stoi((*config_instance)["LISTENPORT_COUNT"]);
-	m_worker_connections = std::stoi((*config_instance)["WORKER_CONNECTIONS"]);
+	m_ListenPortCount = std::stoi((*config_instance)["LISTENPORT_COUNT"]); m_worker_connections = std::stoi((*config_instance)["WORKER_CONNECTIONS"]);
 }
 
 bool CSocket::setnonblocking(int sockfd){

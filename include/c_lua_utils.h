@@ -7,6 +7,9 @@
 
 #include "net_comm.h"
 #include "macro.h"
+#include "c_mongo_conn.h"
+
+#include <LuaIntf.h>
 
 class CLuaUtils
 {
@@ -41,15 +44,26 @@ class CLuaUtils
 		void writeUInt(u_int);
 		void writeUByte(u_char);
 
-	private:
-		void freeJobbuff();
+	public: //mongo相关
+		void flushMongoBuff(int _requestId,int _dbNum,int _opMode,int _noCallBack,std::string _collName,std::string _sqlStr);
+		void runCommandMongo();
+		void writeDocument(std::string _js);
+		std::tuple<int,int,int,std::string> getDbResInfo();
 
 	private:
+		void freeJobbuff();
+		void freeMongobuff();
+
+	private: //收发消息
 		char* m_jobbuff;
 		int m_jobpos;
 		char* m_sendbuff;
 		int m_sendlen;
 		static unsigned short m_maxlen;
+
+	private: //mongo相关
+		LPSTRU_DB_ASKMSG m_msg_info; //临时仓库 放入请求队列时拷贝
+		LPSTRU_DB_ASKRES m_db_res;   //从返回数据队列拉过来 用完清理
 };
 
 #endif

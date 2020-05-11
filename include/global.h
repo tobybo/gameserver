@@ -24,6 +24,8 @@ extern CLogicLua g_logicLua;
 
 extern int g_stopEvent;
 
+extern int gOn;
+
 extern std::map<unsigned short,const char*> SQL_CONF;
 
 #endif

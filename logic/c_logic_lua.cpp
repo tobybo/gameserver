@@ -17,6 +17,8 @@
 
 #include "LuaIntf.h"
 
+#include "bsoncxx/json.hpp"
+
 int gOn;
 int gFrame;
 int gTime; //timestamp
@@ -71,6 +73,12 @@ void* luaintf_binding_and_run(void*)
 		.addFunction("writeByte", &CLuaUtils::writeByte)
 		.addFunction("writeUInt", &CLuaUtils::writeUInt)
 		.addFunction("writeUByte", &CLuaUtils::writeUByte)
+		//mongo
+		.addFunction("flushMongoBuff", &CLuaUtils::flushMongoBuff)
+		.addFunction("writeDocument", &CLuaUtils::writeDocument)
+		.addFunction("runCommandMongo", &CLuaUtils::runCommandMongo)
+		.addFunction("getDbResInfo", &CLuaUtils::getDbResInfo)
+
 		//.addFunction("load", &Web::load, LUA_ARGS(_opt<std::string>))
 		//.addStaticFunction("lambda", [] {
 				// you can use C++11 lambda expression here too
@@ -181,15 +189,22 @@ void* CLogicLua::threadLoopTime(void*)
 void CLogicLua::doLuaLoop()
 {
 	int msgCount = g_threadpool.m_iRecvMsgQueueCount;
-	if(msgCount > 0)
+	int dbResCount = getDbResCount();
+	if(msgCount > 0 || dbResCount > 0)
 	{
 		try{
 			m_luaref = LuaIntf::LuaRef(m_lua, "main_loop");
-			m_luaref(msgCount);
+			m_luaref(msgCount,dbResCount);
 		}
 		catch(LuaIntf::LuaException(m_lua))
 		{
 			log(ERROR,"[LUA_EXCEPTION] info: %s",LuaIntf::LuaException(m_lua).what());
 		}
 	}
+}
+
+int CLogicLua::getDbResCount()
+{
+	CMongoConn* db_instance = CMongoConn::GetInstance();
+	return db_instance->m_resList.size();
 }

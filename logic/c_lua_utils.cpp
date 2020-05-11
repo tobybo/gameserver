@@ -1,4 +1,6 @@
+#include <iostream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <stdarg.h>
 #include <unistd.h>
@@ -16,6 +18,13 @@
 #include "c_dbconn.h"
 #include "c_player_mng.h"
 #include "net_comm.h"
+#include "c_mongo_conn.h"
+
+#include "LuaIntf.h"
+#include <bsoncxx/json.hpp>
+#include <mongocxx/client.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/stdx/string_view.hpp>
 
 unsigned short CLuaUtils::m_maxlen = _PKG_MAX_LENGTH - 1000;
 
@@ -37,6 +46,9 @@ CLuaUtils::CLuaUtils(std::string&)
 	m_sendbuff = new char[m_maxlen];
 	m_sendlen = 0;
 	memset(m_sendbuff, 0, m_maxlen);
+
+	m_msg_info = nullptr;
+	m_db_res = nullptr;
 	//log(INFO,"[LUA_UTILS] CLuaUtils string");
 }
 
@@ -88,6 +100,15 @@ void CLuaUtils::freeJobbuff()
 		m_jobbuff = nullptr;
 	}
 	m_jobpos = 0;
+}
+
+void CLuaUtils::freeMongobuff()
+{
+	if(m_msg_info)
+	{
+		delete m_msg_info;
+		m_msg_info = nullptr;
+	}
 }
 
 std::string CLuaUtils::readString()
@@ -201,3 +222,84 @@ void CLuaUtils::writeUByte(u_char _data)
 	m_sendlen += data_len;
 }
 
+void CLuaUtils::flushMongoBuff(int _requestId,int _dbNum,int _opMode,int _noCallBack,std::string _collName,std::string _sqlStr)
+{
+	freeMongobuff();
+	m_msg_info = new STRU_DB_ASKMSG;
+	m_msg_info->requestId  = _requestId;
+	m_msg_info->dbNum      = _dbNum;
+	m_msg_info->opMode     = _opMode;
+	m_msg_info->noCallBack = _noCallBack;
+	m_msg_info->collName   = _collName;
+	m_msg_info->sqlStr     = _sqlStr;
+}
+
+void CLuaUtils::runCommandMongo()
+{
+	CMongoConn* mongo_instatnce = CMongoConn::GetInstance();
+	LPSTRU_DB_ASKMSG msg_item = new STRU_DB_ASKMSG;
+	//memcpy(msg_item,m_msg_info,sizeof(STRU_DB_ASKMSG));
+	*msg_item = *m_msg_info;
+	int err = pthread_mutex_lock(&(mongo_instatnce->m_mutex_query));
+	if(err != 0)
+		log(ERROR,"[LUA_UTILS] runCommandMongo, lock query err, err: %d",err);
+	mongo_instatnce->m_queryList.push_back(msg_item);
+	err = pthread_mutex_unlock(&(mongo_instatnce->m_mutex_query));
+	if(err != 0)
+		log(ERROR,"[LUA_UTILS] runCommandMongo, unlock query err, err: %d",err);
+	err = pthread_cond_signal(&(mongo_instatnce->m_cond_query));
+	if(err != 0)
+		log(ERROR,"[LUA_UTILS] runCommandMongo, signal query err, err: %d",err);
+}
+
+void CLuaUtils::writeDocument(std::string _doc)
+{
+	log(INFO,"======== %s",_doc.c_str());
+	m_msg_info->doc = _doc;
+
+	//--------------------------------------
+	//CMongoConn* db_conn = CMongoConn::GetInstance();
+	//(db_conn->m_db_game)["test1"].insert_one(m_msg_info->doc);
+	//mongocxx::client conn{mongocxx::uri{}};
+	//bsoncxx::builder::stream::document document{};
+	//document<<"name"<<"toby";
+	//auto collection = conn["game1"]["test1"];
+	//collection.insert_one(document.view());     yes
+	//collection.insert_one(*(m_msg_info->doc));  no
+	//collection.insert_one(bsoncxx::from_json(stv).view()); yes
+	//collection.insert_one(view); no
+
+	//---------------------------------------
+	//for(auto& e:_tab)
+	//{
+		//LuaIntf::LuaRef key = e.key<>();
+		//m_msg_info->doc<<key;
+		//LuaIntf::LuaRef val = e.value<>();
+		//m_msg_info->doc<<val;
+	//}
+
+	//bsoncxx::document::value a = bsoncxx::from_json(_doc);
+	//log(INFO,"========2 %s",bsoncxx::to_json(a.view()));
+	//---------------------------------------
+}
+
+std::tuple<int,int,int,std::string> CLuaUtils::getDbResInfo()
+{
+	int ret(0);
+	int requestId(0);
+	int opMode(0);
+	std::string res("");
+	CMongoConn* db_instance = CMongoConn::GetInstance();
+	db_instance->getOutResList(m_db_res);
+	if(m_db_res)
+	{
+		ret = m_db_res->ret;
+		requestId = m_db_res->requestId;
+		opMode = m_db_res->opMode;
+		res = m_db_res->resStr;
+		delete m_db_res;
+		m_db_res = nullptr;
+	}
+	auto tp = std::make_tuple(ret,requestId,opMode,res);
+	return tp;
+}
