@@ -69,6 +69,11 @@ int CLuaUtils::getMsgCount()
 	return g_threadpool.m_iRecvMsgQueueCount;
 }
 
+int CLuaUtils::getDbResCount()
+{
+	return g_logicLua.getDbResCount();
+}
+
 std::tuple<unsigned short, int, uint64_t> CLuaUtils::getMsgInfo()
 {
 	freeJobbuff();
@@ -254,7 +259,7 @@ void CLuaUtils::runCommandMongo()
 
 void CLuaUtils::writeDocument(std::string _doc)
 {
-	log(INFO,"======== %s",_doc.c_str());
+	//log(INFO,"======== %s",_doc.c_str());
 	m_msg_info->doc = _doc;
 
 	//--------------------------------------

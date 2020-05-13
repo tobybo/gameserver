@@ -74,6 +74,7 @@ void* luaintf_binding_and_run(void*)
 		.addFunction("writeUInt", &CLuaUtils::writeUInt)
 		.addFunction("writeUByte", &CLuaUtils::writeUByte)
 		//mongo
+		.addFunction("getDbResCount", &CLuaUtils::getDbResCount)
 		.addFunction("flushMongoBuff", &CLuaUtils::flushMongoBuff)
 		.addFunction("writeDocument", &CLuaUtils::writeDocument)
 		.addFunction("runCommandMongo", &CLuaUtils::runCommandMongo)
@@ -190,11 +191,12 @@ void CLogicLua::doLuaLoop()
 {
 	int msgCount = g_threadpool.m_iRecvMsgQueueCount;
 	int dbResCount = getDbResCount();
-	if(msgCount > 0 || dbResCount > 0)
+	//if(msgCount > 0 || dbResCount > 0)
 	{
 		try{
+			//static ...
 			m_luaref = LuaIntf::LuaRef(m_lua, "main_loop");
-			m_luaref(msgCount,dbResCount);
+			m_luaref(gTime,gFrame,msgCount,dbResCount);
 		}
 		catch(LuaIntf::LuaException(m_lua))
 		{

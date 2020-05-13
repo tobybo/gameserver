@@ -1,6 +1,8 @@
 #ifndef _LOGIC_COMM_H
 #define _LOGIC_COMM_H
 
+#define PT_MSG_DISCONNECT 0x0001 //断线
+
 //协议定义
 #define PT_ON_PLY_REGIST 0x1000 //玩家注册
 #define PT_ON_PLY_LOGIN  0x1001 //玩家登陆

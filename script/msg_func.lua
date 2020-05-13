@@ -1,12 +1,31 @@
 --上行方法
-msg[msg.PT_DIS_CONNECT] = function(dpid,icq)
+_ENV = msg
 
+msg[PT_DIS_CONNECT] = function(dpid,icq)
+	LLOG("[MSG] disconnect msg, dpid: %d, icq: %d",dpid,icq)
+	player_t:on_msg_disconnect(dpid)
 end
 
-msg[msg.PT_PLY_REGIST] = function(dpid,icq)
-
+msg[PT_PLY_REGIST] = function(dpid,icq)
+	local account = c_lib:readString()
+	local pwd = c_lib:readString()
+	local name = c_lib:readString()
+	player_t.on_player_regist(dpid,icq,account,pwd,name)
 end
 
-msg[msg.PT_PLY_LOGIN] = function(dpid,icq)
+msg[PT_PLY_LOGIN] = function(dpid,icq)
+	local account = c_lib:readString()
+	local pwd = c_lib:readString()
+	player_t.on_player_login(dpid,icq,account,pwd)
+end
 
+msg[PT_PLY_CHAT] = function(player)
+	local message = c_lib:readString()
+	c_lib:flushSendBuff();
+	c_lib:writeString(message);
+	for pid,ply in pairs(player_t.onlinePlys) do
+		if pid ~= ply._id then
+			ply:sendMsg(nil,msg.ST_PLY_CHAT)
+		end
+	end
 end

@@ -1,4 +1,4 @@
 --配置模块
 resmng = {}
-
-require("script/resmng_func")
+setmetatable(resmng,{__index = _G})
+_ENV = resmng

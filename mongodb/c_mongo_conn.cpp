@@ -137,9 +137,8 @@ void CMongoConn::runCommand(LPSTRU_DB_ASKMSG _msg_info)
 					auto cursor = db[_msg_info->collName].find(bsoncxx::from_json(stv).view());
 					resItem->resStr = "";
 					for (auto&& doc : cursor) {
-						if(resItem->resStr != "")
-							resItem->resStr += "|";
 						resItem->resStr += bsoncxx::to_json(doc);
+						resItem->resStr += "|";
 					}
 					log(INFO,"[MONGO] runCommand, res_str: %s",resItem->resStr.c_str());
 					pushIntoResList(resItem);

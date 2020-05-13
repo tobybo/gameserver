@@ -65,6 +65,7 @@ lblfor:
 	return true;
 }
 
+//废弃了 改成lua取消息来处理
 void* CThreadPool::ThreadFunc(void *threadData){
 	//1 取到线程池对象
 	ThreadItem *pThread = static_cast<ThreadItem*>(threadData);

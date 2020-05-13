@@ -386,7 +386,7 @@ do
 					--start = pos
 				end -- jump over escaped chars, no matter what
 			until t == true
-			return (base.loadstring("return " .. js_string:sub(start-1, pos-1) ) ())
+			return (base.load("return " .. js_string:sub(start-1, pos-1) ) ())
 
 			-- We consider the situation where no escaped chars were encountered separately,
 			-- and use the fastest possible return in this case.
@@ -522,4 +522,16 @@ do
 		
 		return r
 	end
+end
+
+function decode_from_mongo(db_res)
+	if db_res == "" then return end
+	local infos = resmng:split_str(db_res,"|")
+	local nodes = {}
+	--LERR("======decode_from_mongo, db_res: %s, len: %d",db_res,#infos)
+	for _,v in ipairs(infos) do
+		--LERR("decode_from_mongo: %s",v)
+		table.insert(nodes,decode(v))
+	end
+	return nodes
 end

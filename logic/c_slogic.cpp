@@ -138,7 +138,7 @@ int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 	LPCOMM_PKG_HEADER  pPkgHeader = (LPCOMM_PKG_HEADER)(pMsgBuf + m_iLenMsgHeader);
 	void* pPkgBody;
 	unsigned short pkglen = ntohs(pPkgHeader->pkgLen);
-
+	//log(INFO,"    getMsgInfo, pkglen: %d, ilen: %d",pkglen,m_iLenPkgHeader);
 	if(m_iLenPkgHeader == pkglen)
 	{
 		if(pPkgHeader->crc32 != 0)
@@ -160,7 +160,7 @@ int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 	unsigned short imsgCode = ntohs(pPkgHeader->msgCode);
 	lp_connection_t pConn = pMsgHeader->pConn;
 
-	if(pConn->iCurrsequence != pMsgHeader->iCurrsequence)
+	if(imsgCode != PT_MSG_DISCONNECT && pConn->iCurrsequence != pMsgHeader->iCurrsequence)
 	{
 		return 0; //连接已经被废弃或者复用了 丢弃该类包
 	}

@@ -1,6 +1,8 @@
 #ifndef _C_THREADPOOL_H_
 #define _C_THREADPOOL_H_
 
+#include "c_socket.h"
+
 #include <vector>
 #include <pthread.h>
 #include <atomic>

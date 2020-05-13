@@ -45,6 +45,7 @@ class CLuaUtils
 		void writeUByte(u_char);
 
 	public: //mongo相关
+		int getDbResCount();
 		void flushMongoBuff(int _requestId,int _dbNum,int _opMode,int _noCallBack,std::string _collName,std::string _sqlStr);
 		void runCommandMongo();
 		void writeDocument(std::string _js);

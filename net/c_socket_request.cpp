@@ -18,6 +18,7 @@
 #include "c_memory.h"
 #include "c_lockmutex.h"
 #include "net_comm.h"
+#include "logic_comm.h"
 
 using std::string;
 using std::cout;
@@ -105,6 +106,7 @@ ssize_t CSocket::recvproc(lp_connection_t pConn,char* buff,ssize_t bufflen)
 		{
 			log(INFO,"[SOCKET] read_request_handler close fd succ, fd: %d",pConn->fd);
 		}
+		putOneDisconnectBuf(pConn);
 		inRecyConnectQueue(pConn);
 		return -1;
 	}
@@ -129,6 +131,7 @@ ssize_t CSocket::recvproc(lp_connection_t pConn,char* buff,ssize_t bufflen)
 		{
 			log(ERROR,"[RECVPKG] recvproc close fd err, fd: %d",pConn->fd);
 		}
+		putOneDisconnectBuf(pConn);
 		inRecyConnectQueue(pConn);
 	}
 	return n;
@@ -189,6 +192,38 @@ void CSocket::wait_request_handler_proc_p1(lp_connection_t pConn)
 			pConn->irecvlen = e_pkgLen - m_iLenPkgHeader;
 		}
 	}
+}
+
+void CSocket::putOneDisconnectBuf(lp_connection_t pConn)
+{
+	CMemory* mem_instance = CMemory::GetInstance();
+	if(pConn->precvMemPointer)
+	{
+		//先释放有问题的包的内存
+		//如果是正常包 放入队列的时候就会置为null
+		//所以不会出现重复释放的问题
+		mem_instance->FreeMemory(pConn->precvMemPointer);
+		pConn->precvMemPointer = nullptr;
+	}
+	char* temp = (char*)mem_instance->AllocMemory(m_iLenPkgHeader + m_iLenMsgHeader,true);
+	pConn->precvMemPointer = temp;
+
+	//添加消息头
+	LPSTRUC_MSG_HEADER pMsgHeader = (LPSTRUC_MSG_HEADER)temp;
+	pMsgHeader->pConn = pConn;
+	pMsgHeader->iCurrsequence = pConn->iCurrsequence;
+	temp += m_iLenMsgHeader;
+	LPCOMM_PKG_HEADER header = (LPCOMM_PKG_HEADER)temp;
+	header->pkgLen = htons(m_iLenPkgHeader);
+	header->msgCode = htons(PT_MSG_DISCONNECT);
+	header->crc32 = htonl(0);
+	//log(INFO,"   disconnect, pkglen: %d, msgcode: %d, crc: %d",m_iLenPkgHeader,PT_MSG_DISCONNECT,header->crc32);
+	//log(INFO,"   disconnect, pkglen: %d, msgcode: %d, crc: %d",header->pkgLen,header->msgCode,header->crc32);
+	//log(INFO,"   disconnect, pkglen: %d, msgcode: %d, crc: %d",htons(header->pkgLen),htons(header->msgCode),htons(header->crc32));
+
+	g_threadpool.inMsgRecvQueueAndSignal(pConn->precvMemPointer);
+	//mem_instance->FreeMemory(pConn->precvMemPointer);
+	pConn->precvMemPointer = nullptr;
 }
 
 void CSocket::wait_request_handler_proc_last(lp_connection_t pConn)
