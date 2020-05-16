@@ -18,6 +18,7 @@
 #include"c_dbconn.h"
 #include"c_player_mng.h"
 #include"c_logic_lua.h"
+#include"c_timer.h"
 
 #include "LuaIntf.h"
 
@@ -86,6 +87,9 @@ void proc_child_init(){
 
 	//初始化玩家管理器
 	CPlayerMng::GetInstance();
+
+	//初始化定时器管理器
+	CTimer::GetInstance();
 
 	//初始化线程池 用lua取消息 这里多线程没意义了
 	/*CConfig *config_instance = CConfig::getInstance();*/

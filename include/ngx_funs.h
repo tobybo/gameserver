@@ -26,6 +26,7 @@ void log_done(const u_char* buff);
 void log_done(std::string& buff);
 void log_lua_test(std::string &str);
 void maketimeout(struct timespec* tsp, long seconds);
+void maketimeoutms(struct timespec* tsp, u_long msec);
 
 int proc_set_daemon();
 int proc_create_childs();

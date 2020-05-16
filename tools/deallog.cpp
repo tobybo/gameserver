@@ -7,8 +7,11 @@
 #include<time.h>
 #include<sys/time.h>
 #include<unistd.h>
+#include<math.h>
 #include"macro.h"
 #include"config.h"
+
+const u_long MAX_NS = pow(1000,3);
 
 using std::cout;
 using std::endl;
@@ -227,5 +230,22 @@ void maketimeout(struct timespec* tsp, long seconds)
 	tsp->tv_nsec = now.tv_usec * 1000;
 
 	tsp->tv_sec += seconds;
+
+}
+
+void maketimeoutms(struct timespec* tsp, u_long msec)
+{
+	struct timeval now;
+
+	gettimeofday(&now, nullptr);
+	tsp->tv_sec = now.tv_sec;
+	tsp->tv_nsec = now.tv_usec * 1000;
+
+	tsp->tv_nsec += msec * 1000 * 1000;
+	if(tsp->tv_nsec >= MAX_NS)
+	{
+		tsp->tv_sec += tsp->tv_nsec / MAX_NS;
+		tsp->tv_nsec -=  MAX_NS;
+	}
 
 }

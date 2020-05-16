@@ -7,10 +7,12 @@
 #include "c_dbconn.h"
 #include "c_player_mng.h"
 #include "c_threadpool.h"
+#include "c_timer.h"
 
 #include <pthread.h>
 #include <sys/unistd.h>
 #include <sys/time.h>
+#include <semaphore.h>
 
 #include <string>
 #include <sstream>
@@ -23,8 +25,8 @@ int gOn;
 int gFrame;
 int gTime; //timestamp
 unsigned long gMsec; //ms
-static const int gFrameTime = 50;  // ms per frame
-static const int gFrameCount = 20; // frames per sec
+//static const int gFrameTime = 50;  // ms per frame
+//static const int gFrameCount = 20; // frames per sec
 
 void* luaintf_binding_and_run(void*);
 
@@ -79,6 +81,10 @@ void* luaintf_binding_and_run(void*)
 		.addFunction("writeDocument", &CLuaUtils::writeDocument)
 		.addFunction("runCommandMongo", &CLuaUtils::runCommandMongo)
 		.addFunction("getDbResInfo", &CLuaUtils::getDbResInfo)
+		//timer
+		.addFunction("addTimer", &CLuaUtils::addTimer)
+		.addFunction("getTimerCount", &CLuaUtils::getTimerCount)
+		.addFunction("getTimerInfo", &CLuaUtils::getTimerInfo)
 
 		//.addFunction("load", &Web::load, LUA_ARGS(_opt<std::string>))
 		//.addStaticFunction("lambda", [] {
@@ -189,14 +195,18 @@ void* CLogicLua::threadLoopTime(void*)
 
 void CLogicLua::doLuaLoop()
 {
+	CTimer* timer_instance = CTimer::GetInstance();
+	timer_instance->semPost();
+
 	int msgCount = g_threadpool.m_iRecvMsgQueueCount;
 	int dbResCount = getDbResCount();
+	int timerCount = timer_instance->getTimerCount();
 	//if(msgCount > 0 || dbResCount > 0)
 	{
 		try{
 			//static ...
 			m_luaref = LuaIntf::LuaRef(m_lua, "main_loop");
-			m_luaref(gTime,gFrame,msgCount,dbResCount);
+			m_luaref(gTime,gFrame,msgCount,dbResCount,timerCount);
 		}
 		catch(LuaIntf::LuaException(m_lua))
 		{

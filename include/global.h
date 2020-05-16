@@ -25,6 +25,9 @@ extern CLogicLua g_logicLua;
 extern int g_stopEvent;
 
 extern int gOn;
+extern int gFrame;
+extern int gTime; //timestamp
+extern unsigned long gMsec; //ms
 
 extern std::map<unsigned short,const char*> SQL_CONF;
 

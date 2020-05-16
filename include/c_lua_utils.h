@@ -51,6 +51,11 @@ class CLuaUtils
 		void writeDocument(std::string _js);
 		std::tuple<int,int,int,std::string> getDbResInfo();
 
+	public: //定时器相关
+		void addTimer(u_long cd_msec, int timer_id, int int_param1, int int_param2, std::string string_param1, std::string string_param2);
+		int getTimerCount();
+		std::tuple<int,int,int,std::string,std::string> getTimerInfo();
+
 	private:
 		void freeJobbuff();
 		void freeMongobuff();

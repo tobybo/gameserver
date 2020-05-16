@@ -11,6 +11,7 @@ PT_PLY_REGIST  = 0x0002 --注册
 ST_PLY_REGIST  = 0x0003 --注册
 PT_PLY_LOGIN   = 0x0004 --登录
 ST_PLY_LOGIN   = 0x0005 --登录
+PT_PLY_TIMER   = 0x0006 --定时器测试
 
 PT_MSG_LINE    = 0x1000 --分界线
 

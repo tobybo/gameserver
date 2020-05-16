@@ -16,6 +16,7 @@ module("script/define")
 module("script/global_func")
 module("script/msg")
 module("script/msg_func")
+module("script/timer")
 module("script/mongo")
 module("script/pending_save")
 module("script/server")
@@ -30,13 +31,13 @@ gMongoCo = gMongoCo or {}
 gCoPool  = gCoPool  or {}
 gActions = gActions or {}
 
-function main_loop(gtime,gframe,msg_count,dbres_count)
+function main_loop(gtime,gframe,msg_count,dbres_count,timer_count)
 	gTime = gtime
 	gFrame = gframe
 	if gFrame % 20 == 0 then
 		local s_count,p_count = player_t:get_socket_plys_count()
-		LLOG("[SERVER] main_loop, step: %d, msg_count: %d, dbres_count: %d, socket_count: %d, online_count: %d",
-			gStep,msg_count,dbres_count,s_count,p_count)
+		--LLOG("[SERVER] main_loop, step: %d, msg_count: %d, dbres_count: %d, socket_count: %d, online_count: %d",
+			--gStep,msg_count,dbres_count,s_count,p_count)
 	end
 	if gStep == 0 then
 		gStep = 1
@@ -66,6 +67,17 @@ function main_loop(gtime,gframe,msg_count,dbres_count)
 			end
 		end
 	end
+	if timer_count > 0 then
+		while true do
+			local co = get_co_from_pool("timer")
+			local ret,flag = coroutine.resume(co)
+			if ret then
+				if flag == "ok" then break end --说明消息处理完了
+			else
+				LERR("[MAIN_LOOP] resume timer co err")
+			end
+		end
+	end
 	if #gActions > 0 then
 		while true do
 			local co = get_co_from_pool("ac")
@@ -85,10 +97,14 @@ function do_threaddb()
 		local dbres_count = c_lib:getDbResCount()
 		if dbres_count > 0 then
 			for i = 1,dbres_count do
-				local ret,req_id,opmod,res = c_lib:getDbResInfo();
-				LLOG("[LUA_GETDBRS] ret: %d, req_id: %d, opmod: %d, res: %s",
-				ret,req_id,opmod,res);
-				mongo:popDbCo(ret,req_id,opmod,res)
+				if c_lib:getDbResCount() > 0 then
+					local ret,req_id,opmod,res = c_lib:getDbResInfo();
+					LLOG("[LUA_GETDBRS] ret: %d, req_id: %d, opmod: %d, res: %s",
+					ret,req_id,opmod,res);
+					mongo:popDbCo(ret,req_id,opmod,res)
+				else
+					break
+				end
 			end
 		end
 		put_co_into_pool("db")
@@ -97,9 +113,13 @@ end
 
 function do_threadac()
 	while true do
-		if #gActions > 0 then
-			local node = table.remove(gActions,1) --先入先出
-			node[1](table.unpack(node[2]))
+		local old_count = #gActions
+		while old_count > 0 do
+			old_count = old_count - 1
+			if #gActions > 0 then
+				local node = table.remove(gActions,1) --先入先出
+				node[1](table.unpack(node[2]))
+			end
 		end
 		put_co_into_pool("action")
 	end
@@ -109,28 +129,41 @@ function do_threadpk()
 	while true do
 		local msg_count = c_lib:getMsgCount()
 		if msg_count > 0 then
-			for i = 1,msg_count do
-				local msg_code,dpid,icq = c_lib:getMsgInfo()
-				if msg_code > 0 then
-					msg:handler(msg_code,dpid,icq)
-					--[[log("[   get one msg, code: %d, dpid: %s, icq: %s ]",msg_code,tostring(dpid),tostring(icq))]]
-					--local msg = c_lib:readString()
-					--log("[   msg info: %s ]",msg)
-					--msg = c_lib:readString()
-					--log("[   msg info: %s ]",msg)
-					--msg = c_lib:readString()
-					--log("[   msg info: %s ]",msg)
-					--test_write(dpid, icq)
-					----req_id,dbnum,opmode,nocallback,collname,sqlstr
-					--c_lib:flushMongoBuff(1,0,2,1,"test1",encode({["$set"] = {name = "toby1"}}))
-					--c_lib:writeDocument(encode({name = "toby"}))
-					--[[c_lib:runCommandMongo()]]
+			for i = 1,msg_count do --限制一帧处理的消息量
+				if c_lib:getMsgCount() > 0 then --避免执行处理函数时挂起而导致消息数不可靠的问题
+					local msg_code,dpid,icq = c_lib:getMsgInfo()
+					if msg_code > 0 then
+						msg:handler(msg_code,dpid,icq)
+					else
+						log("lua_error: msg_count > 0 but no msginfo")
+					end
 				else
-					log("lua_error: msg_count > 0 but no msginfo")
+					break
 				end
 			end
 		end
 		put_co_into_pool("pk")
+	end
+end
+
+function do_threadtimer()
+	while true do
+		local timer_count = c_lib:getTimerCount()
+		if timer_count > 0 then
+			for i = 1,timer_count do --限制一帧处理的消息量
+				if c_lib:getTimerCount() > 0 then --避免执行处理函数时挂起而导致消息数不可靠的问题
+					local eventId,p1,p2,p3,p4 = c_lib:getTimerInfo()
+					if eventId > 0 then
+						timer:handlerTimer(eventId,p1,p2,p3,p4)
+					else
+						log("lua_error: timer_count > 0 but no timerinfo")
+					end
+				else
+					break
+				end
+			end
+		end
+		put_co_into_pool("timer")
 	end
 end
 
@@ -168,6 +201,10 @@ function pcall_threadac()
 	xpcall(do_threadac,STACK)
 end
 
+function pcall_threadtimer()
+	xpcall(do_threadtimer,STACK)
+end
+
 function create_co(what)
 	if what == "pk" then
 		return coroutine.create(pcall_threadpk)
@@ -175,6 +212,8 @@ function create_co(what)
 		return coroutine.create(pcall_threaddb)
 	elseif what == "ac" then
 		return coroutine.create(pcall_threadac)
+	elseif what == "timer" then
+		return coroutine.create(pcall_threadtimer)
 	end
 end
 

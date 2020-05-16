@@ -19,6 +19,7 @@
 #include "c_player_mng.h"
 #include "net_comm.h"
 #include "c_mongo_conn.h"
+#include "c_timer.h"
 
 #include "LuaIntf.h"
 #include <bsoncxx/json.hpp>
@@ -307,4 +308,40 @@ std::tuple<int,int,int,std::string> CLuaUtils::getDbResInfo()
 	}
 	auto tp = std::make_tuple(ret,requestId,opMode,res);
 	return tp;
+}
+
+void CLuaUtils::addTimer(u_long cd_msec, int timer_id, int int_param1, int int_param2, std::string string_param1, std::string string_param2)
+{
+	CTimer* timer_instance = CTimer::GetInstance();
+	timer_instance->addTimer(cd_msec,timer_id,int_param1,int_param2,string_param1,string_param2);
+}
+
+int CLuaUtils::getTimerCount()
+{
+	CTimer* timer_instance = CTimer::GetInstance();
+	return timer_instance->getTimerCount();
+}
+
+std::tuple<int,int,int,std::string,std::string> CLuaUtils::getTimerInfo()
+{
+	CTimer* timer_instance = CTimer::GetInstance();
+	int timerId(0);
+	int p1(0);
+	int p2(0);
+	std::string p3 = "";
+	std::string p4 = "";
+	lpstr_events event = timer_instance->getOneEvent();
+	if(event)
+	{
+		timerId = event->eventId;
+		p1      = event->int_param1;
+		p2      = event->int_param2;
+		p3      = event->string_param1;
+		p4      = event->string_param2;
+
+		delete event;
+		event = nullptr;
+	}
+	auto ret = std::make_tuple(timerId,p1,p2,p3,p4);
+	return ret;
 }
