@@ -121,7 +121,8 @@ void CLuaUtils::freeMongobuff()
 
 bool CLuaUtils::isOverFlow(int diff)
 {
-	return m_joblen <= m_jobpos - diff;
+	//m_jobpos + diff <= m_joblen
+	return m_joblen < m_jobpos + diff;
 }
 
 std::string CLuaUtils::readString()
