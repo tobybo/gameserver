@@ -1,9 +1,9 @@
 
 ifeq ($(DEBUG),true)
-cc = g++ -std=c++17 -g
+cc = g++ -std=c++11 -g
 VERSION = debug
 else
-cc = g++ -std=c++17
+cc = g++ -std=c++11
 VERSION = release
 endif
 

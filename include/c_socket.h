@@ -136,6 +136,7 @@ private:
 	void free_connection(lp_connection_t pConn); //归还参数pConn所代表的连接到连接池
 	void inRecyConnectQueue(lp_connection_t pConn);
 	void putOneDisconnectBuf(lp_connection_t pConn);
+	void safeCloseConn(lp_connection_t pConn);
 
 	//线程相关函数
 	static void* ServerSendQueue(void* threadData);

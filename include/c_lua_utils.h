@@ -59,10 +59,12 @@ class CLuaUtils
 	private:
 		void freeJobbuff();
 		void freeMongobuff();
+		bool isOverFlow(int);
 
 	private: //收发消息
 		char* m_jobbuff;
 		int m_jobpos;
+		int m_joblen;
 		char* m_sendbuff;
 		int m_sendlen;
 		static unsigned short m_maxlen;

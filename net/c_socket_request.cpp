@@ -106,8 +106,7 @@ ssize_t CSocket::recvproc(lp_connection_t pConn,char* buff,ssize_t bufflen)
 		{
 			log(INFO,"[SOCKET] read_request_handler close fd succ, fd: %d",pConn->fd);
 		}
-		putOneDisconnectBuf(pConn);
-		inRecyConnectQueue(pConn);
+		safeCloseConn(pConn);
 		return -1;
 	}
 	if(n<0)
@@ -131,8 +130,7 @@ ssize_t CSocket::recvproc(lp_connection_t pConn,char* buff,ssize_t bufflen)
 		{
 			log(ERROR,"[RECVPKG] recvproc close fd err, fd: %d",pConn->fd);
 		}
-		putOneDisconnectBuf(pConn);
-		inRecyConnectQueue(pConn);
+		safeCloseConn(pConn);
 	}
 	return n;
 }

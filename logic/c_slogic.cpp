@@ -115,7 +115,7 @@ void CLogicSocket::msgSend(lp_connection_t pConn,unsigned short msgCode,char* pP
 	this->CSocket::msgSend(psendbuf);
 }
 
-int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
+int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos, int& joblen)
 {
 	int err = pthread_mutex_lock(&g_threadpool.m_pthreadMutex);
 	if(err != 0)
@@ -138,6 +138,7 @@ int CLogicSocket::getJobBuff(char*& jobbuff, int& jobpos)
 	LPCOMM_PKG_HEADER  pPkgHeader = (LPCOMM_PKG_HEADER)(pMsgBuf + m_iLenMsgHeader);
 	void* pPkgBody;
 	unsigned short pkglen = ntohs(pPkgHeader->pkgLen);
+	joblen = pkglen - m_iLenPkgHeader;
 	//log(INFO,"    getMsgInfo, pkglen: %d, ilen: %d",pkglen,m_iLenPkgHeader);
 	if(m_iLenPkgHeader == pkglen)
 	{

@@ -140,6 +140,12 @@ void CSocket::inRecyConnectQueue(lp_connection_t pConn)
 	++m_recy_connection_n;
 }
 
+void CSocket::safeCloseConn(lp_connection_t pConn)
+{
+	putOneDisconnectBuf(pConn);
+	inRecyConnectQueue(pConn);
+}
+
 //回收数据线程
 void* CSocket::ServerRecyConnectionThread(void* threadData){
 	ThreadItem *pThread = static_cast<ThreadItem*>(threadData);

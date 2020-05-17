@@ -36,8 +36,8 @@ function main_loop(gtime,gframe,msg_count,dbres_count,timer_count)
 	gFrame = gframe
 	if gFrame % 20 == 0 then
 		local s_count,p_count = player_t:get_socket_plys_count()
-		--LLOG("[SERVER] main_loop, step: %d, msg_count: %d, dbres_count: %d, socket_count: %d, online_count: %d",
-			--gStep,msg_count,dbres_count,s_count,p_count)
+		LLOG("[SERVER] main_loop, step: %d, msg_count: %d, dbres_count: %d, socket_count: %d, online_count: %d",
+			gStep,msg_count,dbres_count,s_count,p_count)
 	end
 	if gStep == 0 then
 		gStep = 1

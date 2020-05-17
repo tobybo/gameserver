@@ -106,7 +106,7 @@ void* CTimer::threadFunCheckTimer(void* thread_data)
 		int err = sem_timedwait(&m_sem,&tsp);
 		if(err != 0)
 		{
-			if(errno != ETIMEDOUT)
+			if(errno != ETIMEDOUT && errno != EINTR)
 				log(ERROR,"[TIMER] sem_timedwait err, err: %d",errno);
 		}
 		err = pthread_mutex_lock(&m_mutex_map_timers);

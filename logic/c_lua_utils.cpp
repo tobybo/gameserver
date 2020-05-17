@@ -43,6 +43,7 @@ CLuaUtils::CLuaUtils(std::string&)
 {
 	m_jobbuff = nullptr;
 	m_jobpos = 0;
+	m_joblen = 0;
 	m_maxlen = _PKG_MAX_LENGTH - 1000;
 	m_sendbuff = new char[m_maxlen];
 	m_sendlen = 0;
@@ -81,7 +82,7 @@ std::tuple<unsigned short, int, uint64_t> CLuaUtils::getMsgInfo()
 	unsigned short imsgCode(0);
 	int idx(0);
 	uint64_t icq(0);
-	int ret = g_socket.getJobBuff(m_jobbuff, m_jobpos);
+	int ret = g_socket.getJobBuff(m_jobbuff, m_jobpos, m_joblen);
 	if(ret <= 0)
 	{
 		freeJobbuff();
@@ -106,6 +107,7 @@ void CLuaUtils::freeJobbuff()
 		m_jobbuff = nullptr;
 	}
 	m_jobpos = 0;
+	m_joblen = 0;
 }
 
 void CLuaUtils::freeMongobuff()
@@ -117,28 +119,39 @@ void CLuaUtils::freeMongobuff()
 	}
 }
 
+bool CLuaUtils::isOverFlow(int diff)
+{
+	return m_joblen <= m_jobpos - diff;
+}
+
 std::string CLuaUtils::readString()
 {
+	if(isOverFlow(1))return "";
 	char* tmp = m_jobbuff + m_jobpos;
-	string data(tmp);
 	m_jobpos += strlen(tmp) + 1;
+	if(isOverFlow(0))return "";
+	string data(tmp);
 	return data;
 }
 
 int CLuaUtils::readInt()
 {
+	if(isOverFlow(sizeof(int)))return 0;
 	int data = ntohl(*((int*)(m_jobbuff + m_jobpos)));
 	m_jobpos += sizeof(int);
+	if(isOverFlow(1))return 0;
 	return data;
 }
 
 char CLuaUtils::readByte()
 {
+	if(isOverFlow(sizeof(char)))return 0;
 	return *(m_jobbuff + m_jobpos++);
 }
 
 u_int CLuaUtils::readUInt()
 {
+	if(isOverFlow(sizeof(u_int)))return 0;
 	u_int data = ntohl(*((u_int*)(m_jobbuff + m_jobpos)));
 	m_jobpos += sizeof(u_int);
 	return data;
@@ -146,6 +159,7 @@ u_int CLuaUtils::readUInt()
 
 u_char CLuaUtils::readUByte()
 {
+	if(isOverFlow(sizeof(u_char)))return 0;
 	return (u_char)(*(m_jobbuff + m_jobpos++));
 }
 
@@ -156,7 +170,6 @@ void CLuaUtils::flushSendBuff()
 
 void CLuaUtils::sendMsg(unsigned short _imsgCode, int _idx, uint64_t _icq)
 {
-
 	lp_connection_t pConn = g_socket.get_used_connection(_idx);
 	if(!pConn) return;
 	if(pConn->iCurrsequence != _icq)

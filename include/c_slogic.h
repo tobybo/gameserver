@@ -29,7 +29,7 @@ public:
 public:
 	virtual void threadRecvProcFunc(char *pMsgBuf);
 public:
-	int getJobBuff(char*& jobbuff, int& jobpos);
+	int getJobBuff(char*& jobbuff, int& jobpos, int& joblen);
 	/*void addConn(LPSTRUC_MSG_HEADER pMsgHeader);*/
 	//void addConn(lp_connection_t pConn);
 	//void delConn(LPSTRUC_MSG_HEADER pMsgHeader); //自己释放pMsgHeader
