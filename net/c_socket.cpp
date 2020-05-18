@@ -1,6 +1,8 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 
 #include <string>
@@ -76,14 +78,21 @@ bool CSocket::open_listening_sockets(){
 			close(isock);
 			return false;
 		}
+		log(INFO,"=== reuseaddr: %d",reuseaddr);
 		//避免惊群
 		if(setsockopt(isock,SOL_SOCKET,SO_REUSEPORT,(const void*) &reuseaddr, sizeof(reuseaddr)) == -1){
 			log(ERROR,"[SOCKET] open_listening_sockets setopt1 err, num: %d",i);
 			close(isock);
 			return false;
 		}
+		//避免拥塞控制的nagle算法增加消息延迟
+		if(setsockopt(isock,IPPROTO_TCP,TCP_NODELAY,(const void*) &reuseaddr, sizeof(reuseaddr)) == -1){
+			log(ERROR,"[SOCKET] open_listening_sockets setopt2 err, num: %d",i);
+			close(isock);
+			return false;
+		}
 		if(setnonblocking(isock) == false){
-			log(ERROR,"[SOCKET] open_listening_sockets setlok err, num: %d",i);
+			log(ERROR,"[SOCKET] open_listening_sockets setlok3 err, num: %d",i);
 			close(isock);
 			return false;
 		}

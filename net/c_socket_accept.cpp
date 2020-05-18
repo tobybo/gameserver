@@ -1,6 +1,8 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 
 #include <string>
@@ -79,7 +81,6 @@ void CSocket::event_accept(lp_connection_t oldc)
 				return;
 			}
 		}
-
 		new_pConn->listening = oldc->listening;
 
 		new_pConn->rhandler = &CSocket::read_request_handler;

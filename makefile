@@ -7,7 +7,7 @@ all:
 		make -C $$dir; \
 	done
 	@echo "end make ----------------------"
-	rm -rf app/link_obj app/dep
+	#rm -rf app/link_obj app/dep
 	@echo "end remove ----------------------"
 clean:
 	rm -rf app/link_obj app/dep gameserver
