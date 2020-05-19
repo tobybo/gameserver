@@ -99,11 +99,12 @@ void* CTimer::threadFunCheckTimer(void* thread_data)
 	{
 		sleep(1);
 	}
-	timespec tsp;
+	//timespec tsp;
 	while(true)
 	{
-		maketimeoutms(&tsp,gFrameTime);
-		int err = sem_timedwait(&m_sem,&tsp);
+		//maketimeoutms(&tsp,gFrameTime);
+		//int err = sem_timedwait(&m_sem,&tsp);
+		int err = sem_wait(&m_sem);
 		if(err != 0)
 		{
 			if(errno != ETIMEDOUT && errno != EINTR)
@@ -172,6 +173,8 @@ lpstr_events CTimer::getOneEvent()
 
 void CTimer::semPost()
 {
+	if(m_heap_timers->checkRoot() == 0)
+		return;
 	if(0 != sem_post(&m_sem))
 	{
 		log(ERROR,"[TIMER] sem_post err");
