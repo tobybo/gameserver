@@ -173,7 +173,7 @@ lpstr_events CTimer::getOneEvent()
 
 void CTimer::semPost()
 {
-	if(m_heap_timers->checkRoot() == 0)
+	if(m_heap_timers->checkRoot() != 0)
 		return;
 	if(0 != sem_post(&m_sem))
 	{
